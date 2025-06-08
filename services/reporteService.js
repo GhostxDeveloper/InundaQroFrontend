@@ -29,7 +29,6 @@ const uploadImage = async (imageAsset, reportId) => {
     }
     
     const blob = await response.blob();
-    console.log('Imagen convertida a blob, tamaño:', blob.size);
 
     // Validar tamaño del blob
     if (blob.size > 5 * 1024 * 1024) { // 5MB
@@ -45,13 +44,10 @@ const uploadImage = async (imageAsset, reportId) => {
       }
     };
 
-    console.log('Subiendo imagen a Firebase Storage...');
     const snapshot = await uploadBytes(imageRef, blob, metadata);
-    console.log('Imagen subida exitosamente');
 
     // Obtener URL de descarga
     const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('URL de descarga obtenida:', downloadURL);
 
     return downloadURL;
   } catch (error) {
@@ -96,7 +92,6 @@ export const createFloodReport = async (reportData) => {
       throw new Error('El nivel de severidad es requerido');
     }
 
-    console.log('Creando reporte de inundación...');
 
     // Generar ID único para el reporte
     const reportId = `flood_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -121,25 +116,18 @@ export const createFloodReport = async (reportData) => {
     // Subir imagen si existe
     if (image) {
       try {
-        console.log('Subiendo imagen...');
         
         // Usar la función de diagnóstico mejorada
         const imageUrl = await uploadImageWithDiagnostics(image, reportId);
         reportToSave.imageUrl = imageUrl;
-        console.log('Imagen subida exitosamente');
       } catch (imageError) {
         console.error('Error subiendo imagen, continuando sin imagen:', imageError);
-        // Continuar sin imagen en lugar de fallar completamente
-        // Opcional: puedes descomentar la siguiente línea para fallar si la imagen no se sube
-        // throw new Error(`Error al subir la imagen: ${imageError.message}`);
       }
     }
 
     // Guardar reporte en Firestore
-    console.log('Guardando reporte en Firestore...');
     const docRef = await addDoc(collection(db, 'floodReports'), reportToSave);
-    console.log('Reporte guardado con ID:', docRef.id);
-
+ 
     return docRef.id;
   } catch (error) {
     console.error('Error creando reporte:', error);

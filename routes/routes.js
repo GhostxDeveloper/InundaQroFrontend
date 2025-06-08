@@ -36,6 +36,8 @@ export default function Routes() {
           options={{ headerShown: false }}
         />
         
+        
+        
       </Stack.Navigator>
 
     </NavigationContainer>

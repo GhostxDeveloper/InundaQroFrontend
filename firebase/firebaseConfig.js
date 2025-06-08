@@ -5,13 +5,14 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB5DT907w855QasQUAxrz7eq6MDFi_tGbM",
-  authDomain: "inundaqro.firebaseapp.com",
-  projectId: "inundaqro",
-  storageBucket: "inundaqro.firebasestorage.app",
-  messagingSenderId: "1077541168606",
-  appId: "1:1077541168606:web:07f1770c95627c5c40e94f"
+  apiKey: "AIzaSyCxwj6_9WJaQz_ZwLoMjw-MFBq7dP93Sd4",
+  authDomain: "inundaqro-f2dfa.firebaseapp.com",
+  projectId: "inundaqro-f2dfa",
+  storageBucket: "inundaqro-f2dfa.firebasestorage.app",
+  messagingSenderId: "996217041551",
+  appId: "1:996217041551:web:c64050ec1310c80de876fa"
 };
+
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);

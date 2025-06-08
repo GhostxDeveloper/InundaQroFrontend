@@ -35,7 +35,7 @@ const MapScreen = ({ navigation }) => {
   const mapRef = useRef(null);
 
   // API key de Google Maps - IMPORTANTE: Reemplaza con tu API key real
-  const GOOGLE_MAPS_APIKEY = 'TU_API_KEY_AQUI'; // Cambia esto por tu API key
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk'; // Cambia esto por tu API key
 
   // Región inicial de Querétaro
   const initialRegion = {

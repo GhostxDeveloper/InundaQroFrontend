@@ -7,27 +7,18 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
  * Diagnostica la configuración de Firebase
  */
 export const diagnoseFirebase = () => {
-  console.log('=== DIAGNÓSTICO FIREBASE ===');
   
   try {
-    console.log('Storage disponible:', !!storage);
-    console.log('DB disponible:', !!db);
     
     if (storage) {
-      console.log('Storage app:', storage.app.name);
-      console.log('Storage bucket:', storage._bucket);
     }
     
     if (db) {
-      console.log('DB app:', db.app.name);
-      console.log('DB settings:', db._settings);
     }
     
   } catch (error) {
-    console.error('Error en diagnóstico:', error);
   }
   
-  console.log('============================');
 };
 
 /**
@@ -35,18 +26,14 @@ export const diagnoseFirebase = () => {
  */
 export const testStorageConnection = async () => {
   try {
-    console.log('Probando conexión con Storage...');
     
     // Crear una referencia de prueba
     const testRef = ref(storage, 'test-connection.txt');
-    console.log('Referencia de prueba creada:', testRef.fullPath);
     
     // Intentar subir un archivo pequeño de prueba
     const testBlob = new Blob(['test'], { type: 'text/plain' });
     
-    console.log('Intentando subir archivo de prueba...');
     const snapshot = await uploadBytes(testRef, testBlob);
-    console.log('Archivo de prueba subido exitosamente');
     
     // Obtener URL de descarga
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -69,41 +56,24 @@ export const uploadImageWithDiagnostics = async (imageAsset, reportId) => {
       throw new Error('No se proporcionó una imagen válida');
     }
 
-    console.log('=== INICIO SUBIDA IMAGEN ===');
-    console.log('URI de imagen:', imageAsset.uri);
-    console.log('Tamaño de archivo:', imageAsset.fileSize);
-    console.log('Tipo MIME:', imageAsset.mimeType);
-    console.log('Report ID:', reportId);
-
     // Verificar que Firebase Storage esté configurado
     if (!storage) {
       throw new Error('Firebase Storage no está configurado');
     }
 
-    console.log('Storage bucket:', storage._bucket);
 
     // Crear referencia única para la imagen
     const fileName = `flood-reports/${reportId}/${Date.now()}.jpg`;
     const imageRef = ref(storage, fileName);
-    console.log('Referencia creada:', imageRef.fullPath);
-    console.log('Bucket:', imageRef.bucket);
 
     // Convertir la imagen a blob con más información
-    console.log('Obteniendo imagen desde URI...');
     const response = await fetch(imageAsset.uri);
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       throw new Error(`Error al obtener la imagen: ${response.status} - ${response.statusText}`);
     }
     
     const blob = await response.blob();
-    console.log('Blob creado:');
-    console.log('- Tamaño:', blob.size);
-    console.log('- Tipo:', blob.type);
-    console.log('- Constructor:', blob.constructor.name);
 
     // Validar tamaño del blob
     if (blob.size > 10 * 1024 * 1024) { // 10MB límite más generoso
@@ -126,8 +96,6 @@ export const uploadImageWithDiagnostics = async (imageAsset, reportId) => {
       }
     };
 
-    console.log('Metadatos:', metadata);
-    console.log('Iniciando subida a Firebase Storage...');
     
     // Subir con timeout
     const uploadPromise = uploadBytes(imageRef, blob, metadata);
@@ -136,28 +104,14 @@ export const uploadImageWithDiagnostics = async (imageAsset, reportId) => {
     });
 
     const snapshot = await Promise.race([uploadPromise, timeoutPromise]);
-    console.log('Imagen subida exitosamente');
-    console.log('Snapshot metadata:', snapshot.metadata);
 
     // Obtener URL de descarga
-    console.log('Obteniendo URL de descarga...');
     const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('URL de descarga obtenida:', downloadURL);
-
-    console.log('=== FIN SUBIDA EXITOSA ===');
     return downloadURL;
 
   } catch (error) {
-    console.error('=== ERROR EN SUBIDA ===');
-    console.error('Error completo:', error);
-    console.error('Código de error:', error.code);
-    console.error('Mensaje:', error.message);
-    
     if (error.serverResponse) {
-      console.error('Respuesta del servidor:', error.serverResponse);
     }
-    
-    console.error('======================');
     
     // Manejar errores específicos
     if (error.code === 'storage/unauthorized') {
