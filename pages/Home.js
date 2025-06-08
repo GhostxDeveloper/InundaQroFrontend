@@ -11,10 +11,10 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { styles } from '../styles/styles';
-import axios from 'axios'; // Corregido el typo de 'acxios'
+import { styles } from '../styles/Homestyles';
+import axios from 'axios';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
   const [refreshing, setRefreshing] = useState(false);
   const [currentAlert, setCurrentAlert] = useState('Verde');
   const [weatherData, setWeatherData] = useState({
@@ -45,7 +45,7 @@ const HomeScreen = () => {
       console.log('🌤️ Llamando a la API:', WEATHER_URL);
       
       const response = await axios.get(WEATHER_URL, {
-        timeout: 10000, // 10 segundos de timeout
+        timeout: 10000,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -55,29 +55,21 @@ const HomeScreen = () => {
       console.log('✅ Respuesta de la API:', response.data);
       const data = response.data;
       
-      // Procesar datos de la API
       setWeatherData({
         temperature: `${Math.round(data.main.temp)}°C`,
         humidity: `${data.main.humidity}%`,
         precipitation: data.rain ? `${data.rain['1h'] || 0}mm` : '0mm',
-        windSpeed: `${Math.round(data.wind.speed * 3.6)} km/h`, // Convertir m/s a km/h
+        windSpeed: `${Math.round(data.wind.speed * 3.6)} km/h`,
         description: data.weather[0].description,
         feelsLike: `${Math.round(data.main.feels_like)}°C`,
         pressure: `${data.main.pressure} hPa`,
         visibility: `${(data.visibility / 1000).toFixed(1)} km`
       });
 
-      // Determinar nivel de alerta basado en condiciones climáticas
       determineAlertLevel(data);
       
     } catch (error) {
       console.error('❌ Error fetching weather data:', error);
-      console.error('📋 Error details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data
-      });
       
       let errorMessage = 'Error al obtener datos climáticos';
       
@@ -93,7 +85,6 @@ const HomeScreen = () => {
       
       setWeatherError(errorMessage);
       
-      // Mostrar datos por defecto en caso de error
       setWeatherData({
         temperature: 'N/A',
         humidity: 'N/A',
@@ -109,13 +100,11 @@ const HomeScreen = () => {
     }
   };
 
-  // Función para determinar el nivel de alerta basado en condiciones climáticas
   const determineAlertLevel = (weatherData) => {
     const rainAmount = weatherData.rain ? weatherData.rain['1h'] || 0 : 0;
-    const windSpeed = weatherData.wind.speed * 3.6; // km/h
+    const windSpeed = weatherData.wind.speed * 3.6;
     const weatherMain = weatherData.weather[0].main.toLowerCase();
     
-    // Lógica para determinar el nivel de alerta
     if (rainAmount > 10 || windSpeed > 50 || weatherMain.includes('thunderstorm')) {
       setCurrentAlert('Rojo');
     } else if (rainAmount > 5 || windSpeed > 30 || weatherMain.includes('rain')) {
@@ -125,7 +114,6 @@ const HomeScreen = () => {
     }
   };
 
-  // Cargar datos al montar el componente
   useEffect(() => {
     fetchWeatherData();
   }, []);
@@ -154,6 +142,26 @@ const HomeScreen = () => {
     }
   };
 
+  // Función para manejar las acciones rápidas
+  const handleQuickAction = (actionId, actionTitle) => {
+    switch (actionId) {
+      case 1: // Reportar Inundación
+      navigation.navigate('ReportarInundacion');
+        break;
+      case 2: // Ver Mapa - AQUÍ ES DONDE NAVEGAMOS
+        navigation.navigate('Mapa');
+        break;
+      case 3: // Historial
+        Alert.alert('Historial', 'Función próximamente');
+        break;
+      case 4: // Emergencias
+        Alert.alert('Emergencias', 'Función próximamente');
+        break;
+      default:
+        Alert.alert('Función', `${actionTitle} - Próximamente`);
+    }
+  };
+
   const quickActions = [
     { id: 1, title: 'Reportar Inundación', icon: '📱', color: '#3b82f6' },
     { id: 2, title: 'Ver Mapa', icon: '🗺️', color: '#10b981' },
@@ -174,7 +182,6 @@ const HomeScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>¡Hola!</Text>
           <Text style={styles.location}>📍 Querétaro, QRO</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
@@ -253,7 +260,7 @@ const HomeScreen = () => {
               <TouchableOpacity 
                 key={action.id} 
                 style={[styles.actionButton, { backgroundColor: action.color }]}
-                onPress={() => Alert.alert('Función', `${action.title} - Próximamente`)}
+                onPress={() => handleQuickAction(action.id, action.title)}
               >
                 <Text style={styles.actionIcon}>{action.icon}</Text>
                 <Text style={styles.actionText}>{action.title}</Text>
