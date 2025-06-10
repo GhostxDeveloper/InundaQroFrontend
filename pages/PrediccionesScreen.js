@@ -1,11 +1,19 @@
-const PredicciionsScreen = () => {
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const PrediccionesScreen = () => {
   return (
-    <div>
-      <h1>Predicciones</h1>
-      <p>Esta es la pantalla de predicciones.</p>
-    </div>
+    <View style={styles.container}>
+      <Text style={styles.title}>Predicciones</Text>
+      <Text style={styles.text}>Esta es la pantalla de predicciones.</Text>
+    </View>
   );
-}
+};
 
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  text: { fontSize: 16 }
+});
 
-export default PredicciionsScreen;
+export default PrediccionesScreen;

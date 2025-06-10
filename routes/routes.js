@@ -5,7 +5,7 @@ import HomeScreen from '../pages/Home';
 import SplashScreen from '../pages/SplashScreen'
 import MapScreen from '../pages/MapScreen';
 import ReportarInundacion from '../pages/ReportarInundacion';
-import PredicciionsScreen from '../pages/PrediccionesScreen';
+import PrediccionesScreen from '../pages/PrediccionesScreen';
 
 const Stack = createStackNavigator();
 
@@ -38,7 +38,7 @@ export default function Routes() {
         />
         <Stack.Screen 
           name="Predicciones" 
-          component={PredicciionsScreen} 
+          component={PrediccionesScreen} 
           options={{ title: 'Predicciioes de lluvias', headerShown: false }}
         />
         

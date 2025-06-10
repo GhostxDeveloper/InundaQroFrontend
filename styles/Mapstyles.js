@@ -1,6 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+
+const { width: screenWidth } = Dimensions.get('window');
 
 // Paleta de colores para la aplicación de inundaciones
 const colors = {
@@ -524,4 +525,355 @@ export const styles = StyleSheet.create({
   severityCritical: {
     backgroundColor: colors.severityCritical,
   },
+  // Agregar estos estilos a tu archivo Mapstyles.js
+
+// Estilos para las imágenes del preview
+previewImage: {
+  width: screenWidth,
+  height: 200,
+},
+
+imageScrollView: {
+  flex: 1,
+},
+
+imageLoadingContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: '#f0f0f0',
+},
+
+imageLoadingText: {
+  marginTop: 10,
+  fontSize: 14,
+  color: '#666',
+},
+
+imageIndicatorsContainer: {
+  position: 'absolute',
+  bottom: 10,
+  left: 0,
+  right: 0,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+imageIndicator: {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  marginHorizontal: 3,
+},
+
+imageIndicatorActive: {
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+},
+
+previewImagePlaceholderText: {
+  fontSize: 12,
+  color: '#666',
+  textAlign: 'center',
+  marginTop: 5,
+},
+
+// Estilos para el estado de apertura
+openingStatusContainer: {
+  marginLeft: 10,
+},
+
+openingStatusText: {
+  fontSize: 12,
+  fontWeight: '600',
+},
+
+// Estilos para información de contacto
+contactInfoContainer: {
+  marginTop: 15,
+  paddingTop: 15,
+  borderTopWidth: 1,
+  borderTopColor: '#e0e0e0',
+},
+
+contactItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 8,
+},
+
+contactIcon: {
+  fontSize: 16,
+  marginRight: 10,
+  width: 20,
+  textAlign: 'center',
+},
+
+contactText: {
+  fontSize: 14,
+  color: '#4285F4',
+  flex: 1,
+},
+
+// Estilos para reseñas
+reviewsContainer: {
+  marginTop: 15,
+  paddingTop: 15,
+  borderTopWidth: 1,
+  borderTopColor: '#e0e0e0',
+},
+
+reviewsTitle: {
+  fontSize: 16,
+  fontWeight: '600',
+  marginBottom: 10,
+  color: '#333',
+},
+
+reviewItem: {
+  marginBottom: 12,
+  padding: 10,
+  backgroundColor: '#f9f9f9',
+  borderRadius: 8,
+},
+
+reviewHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 5,
+},
+
+reviewAuthor: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#333',
+  flex: 1,
+},
+
+reviewRating: {
+  flexDirection: 'row',
+},
+
+reviewStar: {
+  fontSize: 12,
+  marginLeft: 1,
+},
+
+reviewText: {
+  fontSize: 13,
+  color: '#666',
+  lineHeight: 18,
+},
+
+// Modificaciones a estilos existentes
+previewContent: {
+  flex: 1,
+  padding: 20,
+  maxHeight: '50%', // Limitar altura para que sea scrolleable
+},
+
+previewButtonsContainer: {
+  flexDirection: 'row',
+  padding: 15,
+  paddingTop: 10,
+  borderTopWidth: 1,
+  borderTopColor: '#e0e0e0',
+  backgroundColor: '#fff',
+},
+
+previewSecondaryButton: {
+  flex: 1,
+  paddingVertical: 12,
+  paddingHorizontal: 15,
+  marginHorizontal: 5,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#4285F4',
+  alignItems: 'center',
+},
+
+previewPrimaryButton: {
+  flex: 1,
+  paddingVertical: 12,
+  paddingHorizontal: 15,
+  marginHorizontal: 5,
+  backgroundColor: '#4285F4',
+  borderRadius: 8,
+  alignItems: 'center',
+},
+
+previewSecondaryButtonText: {
+  color: '#4285F4',
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+previewPrimaryButtonText: {
+  color: '#fff',
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+previewInfoRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 10,
+  flexWrap: 'wrap',
+},
+
+previewInfoItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginRight: 15,
+  marginBottom: 5,
+},
+
+// Agregar estos estilos a tu archivo Mapstyles.js
+
+previewModalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'flex-end',
+},
+
+previewModalBackground: {
+  flex: 1,
+},
+
+previewModalContainer: {
+  backgroundColor: 'white',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  maxHeight: '70%',
+  minHeight: 400,
+},
+
+previewHeader: {
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  padding: 15,
+  paddingBottom: 5,
+},
+
+previewCloseButton: {
+  width: 30,
+  height: 30,
+  borderRadius: 15,
+  backgroundColor: '#f0f0f0',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+previewCloseText: {
+  fontSize: 16,
+  color: '#666',
+  fontWeight: 'bold',
+},
+
+previewImageContainer: {
+  height: 150,
+  marginHorizontal: 15,
+  marginBottom: 15,
+},
+
+previewImagePlaceholder: {
+  flex: 1,
+  backgroundColor: '#f8f8f8',
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+previewImageIcon: {
+  fontSize: 40,
+},
+
+previewContent: {
+  paddingHorizontal: 15,
+  paddingBottom: 20,
+},
+
+previewLocationName: {
+  fontSize: 24,
+  fontWeight: 'bold',
+  color: '#333',
+  marginBottom: 5,
+},
+
+previewLocationAddress: {
+  fontSize: 16,
+  color: '#666',
+  marginBottom: 15,
+  lineHeight: 22,
+},
+
+previewDistanceContainer: {
+  marginBottom: 15,
+},
+
+previewDistanceText: {
+  fontSize: 14,
+  color: '#4285F4',
+  fontWeight: '500',
+},
+
+previewInfoRow: {
+  flexDirection: 'row',
+  marginBottom: 20,
+},
+
+previewInfoItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginRight: 20,
+},
+
+previewInfoIcon: {
+  fontSize: 16,
+  marginRight: 5,
+},
+
+previewInfoText: {
+  fontSize: 14,
+  color: '#666',
+},
+
+previewButtonsContainer: {
+  flexDirection: 'row',
+  paddingHorizontal: 15,
+  paddingBottom: 20,
+  gap: 10,
+},
+
+previewSecondaryButton: {
+  flex: 1,
+  height: 50,
+  backgroundColor: '#f0f0f0',
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+previewSecondaryButtonText: {
+  fontSize: 16,
+  color: '#333',
+  fontWeight: '500',
+},
+
+previewPrimaryButton: {
+  flex: 1,
+  height: 50,
+  backgroundColor: '#4285F4',
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+previewPrimaryButtonText: {
+  fontSize: 16,
+  color: 'white',
+  fontWeight: 'bold',
+},
 });
