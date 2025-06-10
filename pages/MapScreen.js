@@ -13,11 +13,18 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, Callout } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import * as Location from 'expo-location';
-
-const { width, height } = Dimensions.get('window');
+import { styles } from '../styles/Mapstyles';
+// Importar los nuevos servicios
+import { 
+  getAllFloodReports, 
+  subscribeToFloodReports, 
+  getSeverityColor,
+  getSeverityEmoji,
+  getReportsInRadius 
+} from '../services/floodReportsService';
 
 const MapScreen = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -32,10 +39,18 @@ const MapScreen = ({ navigation }) => {
   const [currentInstruction, setCurrentInstruction] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Nuevos estados para reportes de inundación
+  const [floodReports, setFloodReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [showFloodReports, setShowFloodReports] = useState(true);
+  const [selectedSeverityFilter, setSelectedSeverityFilter] = useState('all'); // all, Leve, Moderado, Severo
+  
   const mapRef = useRef(null);
+  const reportsUnsubscribe = useRef(null);
 
-  // API key de Google Maps - IMPORTANTE: Reemplaza con tu API key real
-  const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk'; // Cambia esto por tu API key
+  // API key de Google Maps
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk';
 
   // Región inicial de Querétaro
   const initialRegion = {
@@ -60,7 +75,73 @@ const MapScreen = ({ navigation }) => {
   useEffect(() => {
     getCurrentLocation();
     startLocationTracking();
+    loadFloodReports();
+    
+    // Limpiar suscripción al desmontar
+    return () => {
+      if (reportsUnsubscribe.current) {
+        reportsUnsubscribe.current();
+      }
+    };
   }, []);
+
+  // Cargar reportes de inundación
+  const loadFloodReports = async () => {
+    try {
+      setLoadingReports(true);
+      
+      // Suscripción en tiempo real
+      reportsUnsubscribe.current = subscribeToFloodReports((reports) => {
+        setFloodReports(reports);
+        setLoadingReports(false);
+      });
+      
+    } catch (error) {
+      console.error('Error cargando reportes:', error);
+      setLoadingReports(false);
+      
+      // Fallback: cargar una vez sin suscripción
+      try {
+        const reports = await getAllFloodReports();
+        setFloodReports(reports);
+      } catch (fallbackError) {
+        console.error('Error en fallback:', fallbackError);
+        Alert.alert('Error', 'No se pudieron cargar los reportes de inundación');
+      }
+    }
+  };
+
+  // Filtrar reportes según severidad seleccionada
+  const getFilteredReports = () => {
+    if (selectedSeverityFilter === 'all') {
+      return floodReports;
+    }
+    return floodReports.filter(report => report.severityLevel === selectedSeverityFilter);
+  };
+
+  // Función para formatear fecha
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'Fecha no disponible';
+    
+    let date;
+    if (timestamp.toDate) {
+      // Firestore Timestamp
+      date = timestamp.toDate();
+    } else if (timestamp.seconds) {
+      // Firestore Timestamp serializado
+      date = new Date(timestamp.seconds * 1000);
+    } else {
+      // Date normal
+      date = new Date(timestamp);
+    }
+    
+    return date.toLocaleDateString('es-MX', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -92,7 +173,6 @@ const MapScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Error obteniendo ubicación:', error);
       Alert.alert('Error', 'No se pudo obtener tu ubicación actual');
-      // Usar ubicación por defecto si falla
       setLocation(initialRegion);
     } finally {
       setLoading(false);
@@ -121,7 +201,6 @@ const MapScreen = ({ navigation }) => {
     }
   };
 
-  // Buscar lugares usando Google Places API
   const searchPlaces = async (query) => {
     if (!query.trim()) {
       setSearchResults(popularLocations);
@@ -130,7 +209,6 @@ const MapScreen = ({ navigation }) => {
 
     setIsSearching(true);
     try {
-      // Si no tienes API key, usar ubicaciones predefinidas
       if (GOOGLE_MAPS_APIKEY === 'TU_API_KEY_AQUI') {
         const filtered = popularLocations.filter(loc => 
           loc.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -141,7 +219,6 @@ const MapScreen = ({ navigation }) => {
         return;
       }
 
-      // Buscar cerca de Querétaro
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=20.5888,-100.38806&radius=50000&key=${GOOGLE_MAPS_APIKEY}`
       );
@@ -162,7 +239,6 @@ const MapScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error buscando lugares:', error);
-      // Fallback a búsqueda local
       const filtered = popularLocations.filter(loc => 
         loc.name.toLowerCase().includes(query.toLowerCase())
       );
@@ -194,7 +270,6 @@ const MapScreen = ({ navigation }) => {
     setIsNavigating(true);
     setCurrentInstruction(`Navegando hacia ${destinationName}`);
 
-    // Ajustar el mapa para mostrar toda la ruta
     if (mapRef.current) {
       mapRef.current.fitToCoordinates(
         [location, destinationCoord],
@@ -237,7 +312,6 @@ const MapScreen = ({ navigation }) => {
       'No se pudo calcular la ruta. Verifica tu conexión a internet.',
       [
         { text: 'Reintentar', onPress: () => {
-          // Reintentamos la navegación
           if (destination) {
             setIsNavigating(false);
             setTimeout(() => setIsNavigating(true), 500);
@@ -256,6 +330,8 @@ const MapScreen = ({ navigation }) => {
       </View>
     );
   }
+
+  const filteredReports = getFilteredReports();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -283,6 +359,47 @@ const MapScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Filtros de severidad */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedSeverityFilter === 'all' && styles.filterButtonActive]}
+            onPress={() => setSelectedSeverityFilter('all')}
+          >
+            <Text style={[styles.filterButtonText, selectedSeverityFilter === 'all' && styles.filterButtonTextActive]}>
+              Todos ({floodReports.length})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedSeverityFilter === 'Leve' && styles.filterButtonActive]}
+            onPress={() => setSelectedSeverityFilter('Leve')}
+          >
+            <Text style={[styles.filterButtonText, selectedSeverityFilter === 'Leve' && styles.filterButtonTextActive]}>
+             🟢 Leve ({floodReports.filter(r => r.severityLevel === 'Leve').length})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedSeverityFilter === 'Moderado' && styles.filterButtonActive]}
+            onPress={() => setSelectedSeverityFilter('Moderado')}
+          >
+            <Text style={[styles.filterButtonText, selectedSeverityFilter === 'Moderado' && styles.filterButtonTextActive]}>
+              🟠 Moderado ({floodReports.filter(r => r.severityLevel === 'Moderado').length})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedSeverityFilter === 'Severo' && styles.filterButtonActive]}
+            onPress={() => setSelectedSeverityFilter('Severo')}
+          >
+            <Text style={[styles.filterButtonText, selectedSeverityFilter === 'Severo' && styles.filterButtonTextActive]}>
+              🔴 Severo ({floodReports.filter(r => r.severityLevel === 'Severo').length})
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
       {/* Mapa */}
       <MapView
         ref={mapRef}
@@ -297,6 +414,41 @@ const MapScreen = ({ navigation }) => {
         userLocationAnnotationTitle="Tu ubicación"
         loadingEnabled={true}
       >
+        {/* Marcadores de reportes de inundación */}
+        {showFloodReports && filteredReports.map((report) => (
+          <Marker
+            key={report.id}
+            coordinate={{
+              latitude: report.location.latitude,
+              longitude: report.location.longitude,
+            }}
+            pinColor={getSeverityColor(report.severityLevel)}
+            title={`Inundación ${report.severityLevel}`}
+            description={report.description}
+          >
+            <View style={[styles.customMarker, { backgroundColor: getSeverityColor(report.severityLevel) }]}>
+              <Text style={styles.markerEmoji}>{getSeverityEmoji(report.severityLevel)}</Text>
+            </View>
+            
+            <Callout style={styles.callout}>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>Reporte de Inundación</Text>
+                <Text style={styles.calloutSeverity}>Severidad: {report.severityLevel}</Text>
+                <Text style={styles.calloutDescription} numberOfLines={3}>
+                  {report.description}
+                </Text>
+                <Text style={styles.calloutDate}>
+                  {formatDate(report.createdAt)}
+                </Text>
+                <Text style={styles.calloutStatus}>
+                  Estado: {report.status === 'pending' ? 'Pendiente' : 
+                          report.status === 'verified' ? 'Verificado' : 'Resuelto'}
+                </Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+
         {/* Marcador de destino */}
         {destination && (
           <Marker
@@ -347,6 +499,24 @@ const MapScreen = ({ navigation }) => {
       >
         <Text style={styles.locationButtonText}>📍</Text>
       </TouchableOpacity>
+
+      {/* Botón para toggle de reportes */}
+      <TouchableOpacity 
+        style={[styles.reportsToggleButton, isNavigating && { bottom: 260 }]} 
+        onPress={() => setShowFloodReports(!showFloodReports)}
+      >
+        <Text style={styles.reportsToggleText}>
+          {showFloodReports ? '🌊' : '🚫'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Indicador de carga de reportes */}
+      {loadingReports && (
+        <View style={styles.loadingReportsIndicator}>
+          <ActivityIndicator size="small" color="#4285F4" />
+          <Text style={styles.loadingReportsText}>Cargando reportes...</Text>
+        </View>
+      )}
 
       {/* Panel de navegación */}
       {isNavigating && (
@@ -445,248 +615,5 @@ const MapScreen = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  backButton: {
-    marginRight: 10,
-    padding: 5,
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: '#4285F4',
-    fontWeight: '500',
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  searchInputText: {
-    fontSize: 16,
-  },
-  mapTypeButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  mapTypeButtonText: {
-    fontSize: 20,
-  },
-  map: {
-    flex: 1,
-  },
-  locationButton: {
-    position: 'absolute',
-    right: 20,
-    bottom: 50,
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  locationButtonText: {
-    fontSize: 20,
-  },
-  navigationPanel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    paddingBottom: 20,
-  },
-  navigationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  navigationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  navigationDistance: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4285F4',
-    marginRight: 10,
-  },
-  navigationDuration: {
-    fontSize: 16,
-    color: '#666',
-  },
-  stopNavigationButton: {
-    backgroundColor: '#f1f3f4',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stopNavigationText: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: '500',
-  },
-  instructionContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  instructionText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#333',
-    lineHeight: 24,
-  },
-  warningText: {
-    fontSize: 14,
-    color: '#FF6B6B',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
-    elevation: 2,
-  },
-  modalBackButton: {
-    fontSize: 24,
-    color: '#4285F4',
-    marginRight: 15,
-    fontWeight: '500',
-  },
-  modalSearchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 10,
-    color: '#333',
-  },
-  locationsList: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  searchingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-  },
-  searchingText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  locationsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  locationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
-  },
-  locationIcon: {
-    marginRight: 15,
-    width: 30,
-    alignItems: 'center',
-  },
-  locationIconText: {
-    fontSize: 20,
-  },
-  locationDetails: {
-    flex: 1,
-  },
-  locationName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 2,
-    lineHeight: 20,
-  },
-  locationAddress: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
-  },
-  noResultsContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  noResultsText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-});
 
 export default MapScreen;

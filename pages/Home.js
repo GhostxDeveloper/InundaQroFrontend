@@ -157,6 +157,9 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
       case 4: // Emergencias
         Alert.alert('Emergencias', 'Función próximamente');
         break;
+        case 5: // Predicciones
+        navigation.navigate('Predicciones');
+        break;
       default:
         Alert.alert('Función', `${actionTitle} - Próximamente`);
     }
@@ -167,6 +170,7 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
     { id: 2, title: 'Ver Mapa', icon: '🗺️', color: '#10b981' },
     { id: 3, title: 'Historial', icon: '📊', color: '#8b5cf6' },
     { id: 4, title: 'Emergencias', icon: '🆘', color: '#ef4444' },
+    { id: 5, title: 'Predicciones', icon: '🔮', color: '#f59e0b' },
   ];
 
   const recentAlerts = [
