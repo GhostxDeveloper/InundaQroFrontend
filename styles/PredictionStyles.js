@@ -1,0 +1,130 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    loadingText: {
+        marginTop: 20,
+        fontSize: 16,
+        color: '#333',
+    },
+    chartContainer: {
+        margin: 20,
+        padding: 15,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10,
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginHorizontal: 20,
+        marginBottom: 20,
+    },
+    statCard: {
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 15,
+        alignItems: 'center',
+        width: '30%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    statNumber: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#007AFF',
+    },
+    statLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+    mapContainer: {
+        marginHorizontal: 20,
+        marginBottom: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    mapDescription: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 10,
+    },
+    map: {
+        height: 300,
+        width: '100%',
+        borderRadius: 8,
+    },
+    legendContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginHorizontal: 20,
+        marginBottom: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    legendColor: {
+        width: 15,
+        height: 15,
+        borderRadius: 7.5,
+        marginRight: 5,
+    },
+    legendText: {
+        fontSize: 12,
+        color: '#333',
+    },
+    calloutContent: {
+        width: 150,
+        padding: 5,
+    },
+    calloutTitle: {
+        fontWeight: 'bold',
+        fontSize: 14,
+        marginBottom: 3,
+    },
+    calloutText: {
+        fontSize: 12,
+        color: '#666',
+    },
+});
