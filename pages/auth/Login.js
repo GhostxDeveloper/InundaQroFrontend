@@ -8,9 +8,29 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { loginUser } from "../../services/usersService"; // Asegúrate de que esta ruta sea correcta
 
 export default function LoginScreen({ navigation }) {
   const [secure, setSecure] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError(error);
+    setError(null);
+    const result = await loginUser({ email, password });
+    setLoading(false);
+
+    if (result.success) {
+      // Aquí puedes manejar el éxito del login, por ejemplo, redirigir al usuario a la pantalla principal
+      navigation.navigate("Home"); // Asegúrate de que "Home" sea el nombre correcto de tu pantalla principal
+    } else {
+      console.log("Error en login:", result); // Para depuración
+      setError(result.error || "Error al iniciar sesión.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -30,6 +50,9 @@ export default function LoginScreen({ navigation }) {
             style={styles.input}
             placeholder="Ingresa tu Email"
             placeholderTextColor="#aaa"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
           />
         </View>
         <View style={styles.inputContainer}>
@@ -40,6 +63,8 @@ export default function LoginScreen({ navigation }) {
               placeholder="Ingresa tu Contraseña"
               placeholderTextColor="#aaa"
               secureTextEntry={secure}
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity
               onPress={() => setSecure(!secure)}
@@ -59,8 +84,14 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </Text>
 
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginText}>Login</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginText}>
+            {loading ? "Cargando..." : "Login"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
