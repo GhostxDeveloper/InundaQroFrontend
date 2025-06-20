@@ -225,7 +225,6 @@ const MapScreen = ({ navigation }) => {
   const centerOnUserLocation = () => {
     if (location && mapRef.current) {
       if (isNavigating && navigationViewType === 'firstPerson') {
-        // En navegación, mantener vista en primera persona
         mapRef.current.animateCamera({
           center: location,
           pitch: 60,
