@@ -28,6 +28,7 @@ export async function registerUser({ nombre, email, password }) {
   }
 }
 
+
 export async function loginUser({ email, password }) {
   try {
     // Busca el usuario por email

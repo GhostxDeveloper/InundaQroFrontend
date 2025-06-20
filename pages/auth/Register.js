@@ -16,15 +16,21 @@ export default function RegisterScreen({ navigation }) {
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState(""); // <-- Nuevo estado
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    setError(null);
+  // Para verificación
+  const [step, setStep] = useState(1);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [sentCode, setSentCode] = useState("");
 
-    if (!nombre || !email || !password || !confirmPassword) {
+  // Envía el código al correo
+  const sendVerificationCode = async () => {
+    setError("");
+    if (!nombre || !email || !telefono || !password || !confirmPassword) {
       setError("Por favor, completa todos los campos.");
       return;
     }
@@ -32,8 +38,44 @@ export default function RegisterScreen({ navigation }) {
       setError("Las contraseñas no coinciden.");
       return;
     }
+    // Genera código de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentCode(code);
+
+    try {
+      const response = await fetch(
+        "http://192.168.100.47:3001/send-code", // <-- Pega aquí tu URL real
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: email,
+            code: code,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.text();
+        setError("No se pudo enviar el código de verificación: " + data);
+        return;
+      }
+      setStep(2);
+    } catch (e) {
+      setError("No se pudo enviar el código de verificación: " + e.message);
+    }
+  };
+
+  // Verifica el código y registra
+  const handleVerifyAndRegister = async () => {
+    setError("");
+    if (verificationCode !== sentCode) {
+      setError("El código ingresado es incorrecto.");
+      return;
+    }
     setLoading(true);
-    const result = await registerUser({ nombre, email, password });
+    // Ahora enviamos también el teléfono
+    const result = await registerUser({ nombre, email, telefono, password });
     setLoading(false);
 
     if (result.success) {
@@ -46,17 +88,15 @@ export default function RegisterScreen({ navigation }) {
       });
       navigation.navigate("Login");
     } else {
-      console.log("Error en registro:", result); // <-- Para depuración
       setError(result.error || "Error al registrar usuario.");
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Logo en el centro superior */}
       <View style={styles.logoContainer}>
         <Image
-          source={require("../../assets/logo.png")} // Ajusta la ruta según tu proyecto
+          source={require("../../assets/logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -68,87 +108,126 @@ export default function RegisterScreen({ navigation }) {
             {error}
           </Text>
         ) : null}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Nombre completo</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ingresa tu nombre completo"
-            placeholderTextColor="#aaa"
-            value={nombre}
-            onChangeText={setNombre}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ingresa tu Email"
-            placeholderTextColor="#aaa"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Contraseña</Text>
-          <View style={styles.passwordRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Ingresa tu Contraseña"
-              placeholderTextColor="#aaa"
-              secureTextEntry={secure}
-              value={password}
-              onChangeText={setPassword}
-            />
+
+        {step === 1 ? (
+          <>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nombre completo</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ingresa tu nombre completo"
+                placeholderTextColor="#aaa"
+                value={nombre}
+                onChangeText={setNombre}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ingresa tu Email"
+                placeholderTextColor="#aaa"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Teléfono</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ingresa tu número de teléfono"
+                placeholderTextColor="#aaa"
+                keyboardType="phone-pad"
+                value={telefono}
+                onChangeText={setTelefono}
+                maxLength={15}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Contraseña</Text>
+              <View style={styles.passwordRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Ingresa tu Contraseña"
+                  placeholderTextColor="#aaa"
+                  secureTextEntry={secure}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setSecure(!secure)}
+                  style={styles.eyeButton}
+                >
+                  <Text style={{ color: "#aaa", fontSize: 18 }}>
+                    {secure ? "🙈" : "🐵"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirmar Contraseña</Text>
+              <View style={styles.passwordRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Confirma tu Contraseña"
+                  placeholderTextColor="#aaa"
+                  secureTextEntry={confirmSecure}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setConfirmSecure(!confirmSecure)}
+                  style={styles.eyeButton}
+                >
+                  <Text style={{ color: "#aaa", fontSize: 18 }}>
+                    {confirmSecure ? "🙈" : "🐵"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <Text style={styles.registerText}>
+              ¿Ya tienes cuenta?{" "}
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.registerLink}>Inicia sesión</Text>
+              </TouchableOpacity>
+            </Text>
             <TouchableOpacity
-              onPress={() => setSecure(!secure)}
-              style={styles.eyeButton}
+              style={styles.loginButton}
+              onPress={sendVerificationCode}
+              disabled={loading}
             >
-              <Text style={{ color: "#aaa", fontSize: 18 }}>
-                {secure ? "🙈" : "🐵"}
+              <Text style={styles.loginText}>
+                {loading
+                  ? "Enviando código..."
+                  : "Enviar código de verificación"}
               </Text>
             </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirmar Contraseña</Text>
-          <View style={styles.passwordRow}>
+          </>
+        ) : (
+          <>
+            <Text style={{ marginBottom: 10 }}>
+              Ingresa el código enviado a tu correo
+            </Text>
             <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Confirma tu Contraseña"
-              placeholderTextColor="#aaa"
-              secureTextEntry={confirmSecure}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              style={styles.input}
+              placeholder="Código de verificación"
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+              keyboardType="numeric"
             />
             <TouchableOpacity
-              onPress={() => setConfirmSecure(!confirmSecure)}
-              style={styles.eyeButton}
+              style={styles.loginButton}
+              onPress={handleVerifyAndRegister}
+              disabled={loading}
             >
-              <Text style={{ color: "#aaa", fontSize: 18 }}>
-                {confirmSecure ? "🙈" : "🐵"}
+              <Text style={styles.loginText}>
+                {loading ? "Registrando..." : "Verificar y registrar"}
               </Text>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        <Text style={styles.registerText}>
-          ¿Ya tienes cuenta?{" "}
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.registerLink}>Inicia sesión</Text>
-          </TouchableOpacity>
-        </Text>
-
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={handleRegister}
-          disabled={loading}
-        >
-          <Text style={styles.loginText}>
-            {loading ? "Registrando..." : "Registrarse"}
-          </Text>
-        </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );
