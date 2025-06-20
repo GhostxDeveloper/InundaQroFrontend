@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import { styles } from '../../styles/Mapstyles';
+import { styles } from '../../styles/SearchModalStyles';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk';
 
