@@ -18,13 +18,63 @@ import MapViewDirections from 'react-native-maps-directions';
 import * as Location from 'expo-location';
 import { styles } from '../styles/Mapstyles';
 // Importar los nuevos servicios
-import { 
-  getAllFloodReports, 
-  subscribeToFloodReports, 
+import {
+  getAllFloodReports,
+  subscribeToFloodReports,
   getSeverityColor,
   getSeverityEmoji,
-  getReportsInRadius 
+  getReportsInRadius
 } from '../services/floodReportsService';
+import axios from 'axios';
+
+// Calcula distancia en metros entre dos coordenadas
+const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Envía alerta al backend si está cerca de una inundación severa
+let alertSent = false;
+
+const checkFloodProximity = async (userLocation, floodReports, userPhone) => {
+  console.log('Entrando a checkFloodProximity');
+  let isNear = false;
+  for (const report of floodReports) {
+    console.log('Revisando reporte:', report);
+    if (report.severityLevel === 'Severo') {
+      const distance = getDistanceMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        report.location.latitude,
+        report.location.longitude
+      );
+      console.log('Distancia a reporte severo:', distance);
+      if (distance <= 500) {
+        isNear = true;
+        if (!alertSent) {
+          console.log('Enviando alerta de llamada a:', userPhone, 'Distancia:', distance);
+          await axios.post('http://192.168.1.73:3001/api/alerta-inundacion', {
+            phoneNumber: userPhone,
+            message: '¡Alerta de inundación severa! Estás cerca de una zona peligrosa. Busca un lugar seguro.'
+          });
+          alertSent = true;
+          alert('¡Alerta de inundación severa! Recibirás una llamada de advertencia.');
+        }
+        break;
+      }
+    }
+  }
+  if (!isNear) {
+    alertSent = false; // Permite reenviar si te alejas y regresas
+  }
+};
 
 const MapScreen = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -39,13 +89,13 @@ const MapScreen = ({ navigation }) => {
   const [currentInstruction, setCurrentInstruction] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Nuevos estados para reportes de inundación
   const [floodReports, setFloodReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [showFloodReports, setShowFloodReports] = useState(true);
   const [selectedSeverityFilter, setSelectedSeverityFilter] = useState('all'); // all, Leve, Moderado, Severo
-  
+
   const mapRef = useRef(null);
   const reportsUnsubscribe = useRef(null);
 
@@ -72,11 +122,13 @@ const MapScreen = ({ navigation }) => {
     { name: 'Estadio Corregidora', address: 'Av. Estadio, Santiago de Querétaro, Qro.', coordinate: { latitude: 20.5369, longitude: -100.4447 } },
   ];
 
+  const userPhone = '+524427167903'; // Cambia por el número verificado en Twilio
+
   useEffect(() => {
     getCurrentLocation();
     startLocationTracking();
     loadFloodReports();
-    
+
     // Limpiar suscripción al desmontar
     return () => {
       if (reportsUnsubscribe.current) {
@@ -85,21 +137,28 @@ const MapScreen = ({ navigation }) => {
     };
   }, []);
 
+  // Llama a la función cuando la ubicación o los reportes cambian
+  useEffect(() => {
+    if (location && floodReports.length > 0) {
+      checkFloodProximity(location, floodReports, userPhone);
+    }
+  }, [location, floodReports]);
+
   // Cargar reportes de inundación
   const loadFloodReports = async () => {
     try {
       setLoadingReports(true);
-      
+
       // Suscripción en tiempo real
       reportsUnsubscribe.current = subscribeToFloodReports((reports) => {
         setFloodReports(reports);
         setLoadingReports(false);
       });
-      
+
     } catch (error) {
       console.error('Error cargando reportes:', error);
       setLoadingReports(false);
-      
+
       // Fallback: cargar una vez sin suscripción
       try {
         const reports = await getAllFloodReports();
@@ -122,7 +181,7 @@ const MapScreen = ({ navigation }) => {
   // Función para formatear fecha
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Fecha no disponible';
-    
+
     let date;
     if (timestamp.toDate) {
       // Firestore Timestamp
@@ -134,7 +193,7 @@ const MapScreen = ({ navigation }) => {
       // Date normal
       date = new Date(timestamp);
     }
-    
+
     return date.toLocaleDateString('es-MX', {
       day: 'numeric',
       month: 'short',
@@ -146,7 +205,7 @@ const MapScreen = ({ navigation }) => {
   const getCurrentLocation = async () => {
     try {
       setLoading(true);
-      
+
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -210,7 +269,7 @@ const MapScreen = ({ navigation }) => {
     setIsSearching(true);
     try {
       if (GOOGLE_MAPS_APIKEY === 'TU_API_KEY_AQUI') {
-        const filtered = popularLocations.filter(loc => 
+        const filtered = popularLocations.filter(loc =>
           loc.name.toLowerCase().includes(query.toLowerCase()) ||
           loc.address.toLowerCase().includes(query.toLowerCase())
         );
@@ -222,9 +281,9 @@ const MapScreen = ({ navigation }) => {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=20.5888,-100.38806&radius=50000&key=${GOOGLE_MAPS_APIKEY}`
       );
-      
+
       const data = await response.json();
-      
+
       if (data.results) {
         const results = data.results.slice(0, 10).map(place => ({
           name: place.name,
@@ -239,7 +298,7 @@ const MapScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error buscando lugares:', error);
-      const filtered = popularLocations.filter(loc => 
+      const filtered = popularLocations.filter(loc =>
         loc.name.toLowerCase().includes(query.toLowerCase())
       );
       setSearchResults(filtered);
@@ -308,18 +367,54 @@ const MapScreen = ({ navigation }) => {
   const handleDirectionsError = (errorMessage) => {
     console.error('Error en direcciones:', errorMessage);
     Alert.alert(
-      'Error de navegación', 
+      'Error de navegación',
       'No se pudo calcular la ruta. Verifica tu conexión a internet.',
       [
-        { text: 'Reintentar', onPress: () => {
-          if (destination) {
-            setIsNavigating(false);
-            setTimeout(() => setIsNavigating(true), 500);
+        {
+          text: 'Reintentar', onPress: () => {
+            if (destination) {
+              setIsNavigating(false);
+              setTimeout(() => setIsNavigating(true), 500);
+            }
           }
-        }},
+        },
         { text: 'Cancelar', onPress: stopNavigation }
       ]
     );
+  };
+
+  // Llama al backend si está cerca de una inundación severa
+  const checkFloodProximity = async (userLocation, floodReports, userPhone) => {
+    console.log('Entrando a checkFloodProximity');
+    let isNear = false;
+    for (const report of floodReports) {
+      console.log('Revisando reporte:', report);
+      if (report.severityLevel === 'Severo') {
+        const distance = getDistanceMeters(
+          userLocation.latitude,
+          userLocation.longitude,
+          report.location.latitude,
+          report.location.longitude
+        );
+        console.log('Distancia a reporte severo:', distance);
+        if (distance <= 500) {
+          isNear = true;
+          if (!alertSent) {
+            console.log('Enviando alerta de llamada a:', userPhone, 'Distancia:', distance);
+            await axios.post('http://192.168.1.73:3001/api/alerta-inundacion', {
+              phoneNumber: userPhone,
+              message: '¡Alerta de inundación severa! Estás cerca de una zona peligrosa. Busca un lugar seguro.'
+            });
+            alertSent = true;
+            alert('¡Alerta de inundación severa! Recibirás una llamada de advertencia.');
+          }
+          break;
+        }
+      }
+    }
+    if (!isNear) {
+      alertSent = false; // Permite reenviar si te alejas y regresas
+    }
   };
 
   if (loading) {
@@ -336,21 +431,21 @@ const MapScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4285F4" barStyle="light-content" />
-      
+
       {/* Barra de búsqueda */}
       <View style={styles.searchBar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.searchInput} onPress={openSearchModal}>
           <Text style={[styles.searchInputText, { color: searchText ? '#000' : '#666' }]}>
             {searchText || '¿A dónde quieres ir?'}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.mapTypeButton} 
+        <TouchableOpacity
+          style={styles.mapTypeButton}
           onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}
         >
           <Text style={styles.mapTypeButtonText}>
@@ -362,7 +457,7 @@ const MapScreen = ({ navigation }) => {
       {/* Filtros de severidad */}
       <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, selectedSeverityFilter === 'all' && styles.filterButtonActive]}
             onPress={() => setSelectedSeverityFilter('all')}
           >
@@ -370,17 +465,17 @@ const MapScreen = ({ navigation }) => {
               Todos ({floodReports.length})
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.filterButton, selectedSeverityFilter === 'Leve' && styles.filterButtonActive]}
             onPress={() => setSelectedSeverityFilter('Leve')}
           >
             <Text style={[styles.filterButtonText, selectedSeverityFilter === 'Leve' && styles.filterButtonTextActive]}>
-             🟢 Leve ({floodReports.filter(r => r.severityLevel === 'Leve').length})
+              🟢 Leve ({floodReports.filter(r => r.severityLevel === 'Leve').length})
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.filterButton, selectedSeverityFilter === 'Moderado' && styles.filterButtonActive]}
             onPress={() => setSelectedSeverityFilter('Moderado')}
           >
@@ -388,8 +483,8 @@ const MapScreen = ({ navigation }) => {
               🟠 Moderado ({floodReports.filter(r => r.severityLevel === 'Moderado').length})
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.filterButton, selectedSeverityFilter === 'Severo' && styles.filterButtonActive]}
             onPress={() => setSelectedSeverityFilter('Severo')}
           >
@@ -429,7 +524,7 @@ const MapScreen = ({ navigation }) => {
             <View style={[styles.customMarker, { backgroundColor: getSeverityColor(report.severityLevel) }]}>
               <Text style={styles.markerEmoji}>{getSeverityEmoji(report.severityLevel)}</Text>
             </View>
-            
+
             <Callout style={styles.callout}>
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>Reporte de Inundación</Text>
@@ -441,8 +536,8 @@ const MapScreen = ({ navigation }) => {
                   {formatDate(report.createdAt)}
                 </Text>
                 <Text style={styles.calloutStatus}>
-                  Estado: {report.status === 'pending' ? 'Pendiente' : 
-                          report.status === 'verified' ? 'Verificado' : 'Resuelto'}
+                  Estado: {report.status === 'pending' ? 'Pendiente' :
+                    report.status === 'verified' ? 'Verificado' : 'Resuelto'}
                 </Text>
               </View>
             </Callout>
@@ -493,16 +588,16 @@ const MapScreen = ({ navigation }) => {
       </MapView>
 
       {/* Botón de ubicación */}
-      <TouchableOpacity 
-        style={[styles.locationButton, isNavigating && { bottom: 200 }]} 
+      <TouchableOpacity
+        style={[styles.locationButton, isNavigating && { bottom: 200 }]}
         onPress={centerOnUserLocation}
       >
         <Text style={styles.locationButtonText}>📍</Text>
       </TouchableOpacity>
 
       {/* Botón para toggle de reportes */}
-      <TouchableOpacity 
-        style={[styles.reportsToggleButton, isNavigating && { bottom: 260 }]} 
+      <TouchableOpacity
+        style={[styles.reportsToggleButton, isNavigating && { bottom: 260 }]}
         onPress={() => setShowFloodReports(!showFloodReports)}
       >
         <Text style={styles.reportsToggleText}>
@@ -534,7 +629,7 @@ const MapScreen = ({ navigation }) => {
               <Text style={styles.stopNavigationText}>✕</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.instructionContainer}>
             <Text style={styles.instructionText}>
               {currentInstruction}
