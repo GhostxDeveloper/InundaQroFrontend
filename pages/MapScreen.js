@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   StatusBar,
   Text,
+  Modal,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { styles } from '../styles/Mapstyles';
@@ -14,30 +15,32 @@ import {
   subscribeToFloodReports, 
 } from '../services/floodReportsService';
 
-// Componentes 
+// Componentes existentes
 import MapHeader from '../Components/Maps/MapHeader';
 import MapContainer from '../Components/Maps/MapContainer';
 import NavigationControls from '../Components/Maps/NavigationControl';
 import SearchModal from '../Components/Maps/SearchModal';
-import LocationPreviewModal from '../Components/Maps/LocationPreviewModal'; // Nuevo componente
+import LocationPreviewModal from '../Components/Maps/LocationPreviewModal';
+
+// Componente de navegación guiada
+import GuidedNavigation from '../Components/Maps/GuidedNavigation';
 
 const MapScreen = ({ navigation }) => {
   // Estados principales
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mapType, setMapType] = useState('standard');
-  const [destination, setDestination] = useState(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [routeDistance, setRouteDistance] = useState(null);
-  const [routeDuration, setRouteDuration] = useState(null);
-  const [currentInstruction, setCurrentInstruction] = useState('');
   
-  // Estados para preview de ubicación (NUEVOS)
+  // Estados para preview de ubicación
   const [showLocationPreview, setShowLocationPreview] = useState(false);
   const [previewLocation, setPreviewLocation] = useState(null);
-  const [navigationViewType, setNavigationViewType] = useState('overview'); // 'overview' o 'firstPerson'
+  
+  // Estados para navegación guiada
+  const [showGuidedNavigation, setShowGuidedNavigation] = useState(false);
+  const [guidedDestination, setGuidedDestination] = useState(null);
+  const [guidedDestinationName, setGuidedDestinationName] = useState('');
   
   // Estados para reportes
   const [floodReports, setFloodReports] = useState([]);
@@ -155,7 +158,7 @@ const MapScreen = ({ navigation }) => {
     return floodReports.filter(report => report.severityLevel === selectedSeverityFilter);
   };
 
-  // NUEVA FUNCIÓN: Mostrar preview en lugar de navegar inmediatamente
+  // Función para mostrar preview de ubicación
   const showLocationPreviewModal = (location) => {
     setPreviewLocation(location);
     setShowLocationPreview(true);
@@ -173,96 +176,68 @@ const MapScreen = ({ navigation }) => {
     }
   };
 
-  // FUNCIÓN MODIFICADA: Iniciar navegación desde el preview
+  // Función para iniciar navegación guiada directamente
   const startNavigation = (destinationCoord, destinationName) => {
     if (!location) {
       Alert.alert('Error', 'No se pudo obtener tu ubicación actual');
       return;
     }
 
-    setDestination(destinationCoord);
-    setIsNavigating(true);
-    setNavigationViewType('firstPerson'); // Cambiar a vista en primera persona
-    setCurrentInstruction(`Navegando hacia ${destinationName}`);
-    setPreviewLocation(null); // Limpiar preview
-
-    // Ajustar vista del mapa para navegación
-    if (mapRef.current) {
-      // Cambiar a vista de primera persona
-      setTimeout(() => {
-        mapRef.current.animateCamera({
-          center: location,
-          pitch: 60,
-          heading: 0,
-          altitude: 500,
-          zoom: 18,
-        }, 1000);
-      }, 500);
-    }
+    // Configurar datos para navegación guiada
+    setGuidedDestination(destinationCoord);
+    setGuidedDestinationName(destinationName);
+    setShowGuidedNavigation(true);
+    
+    // Limpiar estados del preview
+    setShowLocationPreview(false);
+    setPreviewLocation(null);
+    setSearchText('');
   };
 
-  const stopNavigation = () => {
-    setDestination(null);
-    setIsNavigating(false);
-    setNavigationViewType('overview'); // Volver a vista general
-    setRouteDistance(null);
-    setRouteDuration(null);
-    setCurrentInstruction('');
-    setSearchText('');
+  // Función para completar navegación guiada
+  const handleGuidedNavigationComplete = () => {
+    setShowGuidedNavigation(false);
+    setGuidedDestination(null);
+    setGuidedDestinationName('');
     
-    // Volver a vista normal
-    if (mapRef.current && location) {
-      mapRef.current.animateCamera({
-        center: location,
-        pitch: 0,
-        heading: 0,
-        altitude: 1000,
-        zoom: 15,
-      }, 1000);
-    }
+    Alert.alert(
+      '¡Llegaste a tu destino!',
+      '¿Cómo estuvo tu viaje?',
+      [
+        { text: 'Excelente', onPress: () => console.log('Feedback: Excelente') },
+        { text: 'Bien', onPress: () => console.log('Feedback: Bien') },
+        { text: 'Cerrar', style: 'cancel' }
+      ]
+    );
+  };
+
+  // Función para cancelar navegación guiada
+  const handleGuidedNavigationCancel = () => {
+    Alert.alert(
+      'Cancelar navegación',
+      '¿Estás seguro de que quieres cancelar la navegación?',
+      [
+        { text: 'No', style: 'cancel' },
+        { 
+          text: 'Sí, cancelar', 
+          onPress: () => {
+            setShowGuidedNavigation(false);
+            setGuidedDestination(null);
+            setGuidedDestinationName('');
+          }
+        }
+      ]
+    );
   };
 
   const centerOnUserLocation = () => {
     if (location && mapRef.current) {
-      if (isNavigating && navigationViewType === 'firstPerson') {
-        mapRef.current.animateCamera({
-          center: location,
-          pitch: 60,
-          heading: 0,
-          altitude: 500,
-          zoom: 18,
-        }, 1000);
-      } else {
-        // Vista normal
-        mapRef.current.animateToRegion({
-          ...location,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }, 1000);
-      }
+      mapRef.current.animateToRegion({
+        ...location,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
     }
-  };
-
-  const handleDirectionsReady = (result) => {
-    setRouteDistance(result.distance.toFixed(1) + ' km');
-    setRouteDuration(Math.round(result.duration) + ' min');
-  };
-
-  const handleDirectionsError = (errorMessage) => {
-    console.error('Error en direcciones:', errorMessage);
-    Alert.alert(
-      'Error de navegación', 
-      'No se pudo calcular la ruta. Verifica tu conexión a internet.',
-      [
-        { text: 'Reintentar', onPress: () => {
-          if (destination) {
-            setIsNavigating(false);
-            setTimeout(() => setIsNavigating(true), 500);
-          }
-        }},
-        { text: 'Cancelar', onPress: stopNavigation }
-      ]
-    );
   };
 
   if (loading) {
@@ -278,66 +253,76 @@ const MapScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4285F4" barStyle="light-content" />
       
-      <MapHeader
-        navigation={navigation}
-        searchText={searchText}
-        mapType={mapType}
-        setMapType={setMapType}
-        setShowSearchModal={setShowSearchModal}
-        floodReports={floodReports}
-        selectedSeverityFilter={selectedSeverityFilter}
-        setSelectedSeverityFilter={setSelectedSeverityFilter}
-        loadingReports={loadingReports}
-      />
+{showGuidedNavigation ? (
+  <Modal
+    visible={showGuidedNavigation}
+    animationType="slide"
+    presentationStyle="fullScreen"
+  >
+    <GuidedNavigation
+      origin={location}
+      destination={guidedDestination}
+      destinationName={guidedDestinationName}
+      onNavigationComplete={handleGuidedNavigationComplete}
+      onNavigationCancel={handleGuidedNavigationCancel}
+      mapType={mapType}
+      showTraffic={true}
+      showFloodReports={showFloodReports} // Pasar el estado de reportes
+      selectedSeverityFilter={selectedSeverityFilter} // Pasar el filtro de severidad
+    />
+  </Modal>
+      ) : (
+        <>
+          {/* Interfaz normal del mapa */}
+          <MapHeader
+            navigation={navigation}
+            searchText={searchText}
+            mapType={mapType}
+            setMapType={setMapType}
+            setShowSearchModal={setShowSearchModal}
+            floodReports={floodReports}
+            selectedSeverityFilter={selectedSeverityFilter}
+            setSelectedSeverityFilter={setSelectedSeverityFilter}
+            loadingReports={loadingReports}
+          />
 
-      <MapContainer
-        mapRef={mapRef}
-        location={location}
-        initialRegion={initialRegion}
-        mapType={mapType}
-        destination={destination}
-        isNavigating={isNavigating}
-        showFloodReports={showFloodReports}
-        filteredReports={getFilteredReports()}
-        onDirectionsReady={handleDirectionsReady}
-        onDirectionsError={handleDirectionsError}
-        previewLocation={previewLocation} // Nueva prop
-        navigationViewType={navigationViewType} // Nueva prop
-      />
+          <MapContainer
+            mapRef={mapRef}
+            location={location}
+            initialRegion={initialRegion}
+            mapType={mapType}
+            showFloodReports={showFloodReports}
+            filteredReports={getFilteredReports()}
+            previewLocation={previewLocation}
+          />
 
-      <NavigationControls
-        isNavigating={isNavigating}
-        showFloodReports={showFloodReports}
-        setShowFloodReports={setShowFloodReports}
-        routeDistance={routeDistance}
-        routeDuration={routeDuration}
-        currentInstruction={currentInstruction}
-        onCenterLocation={centerOnUserLocation}
-        onStopNavigation={stopNavigation}
-        loadingReports={loadingReports}
-        navigationViewType={navigationViewType} // Nueva prop
-        setNavigationViewType={setNavigationViewType} // Nueva prop
-      />
+          <NavigationControls
+            showFloodReports={showFloodReports}
+            setShowFloodReports={setShowFloodReports}
+            onCenterLocation={centerOnUserLocation}
+            loadingReports={loadingReports}
+          />
 
-      <SearchModal
-        visible={showSearchModal}
-        searchText={searchText}
-        setSearchText={setSearchText}
-        onClose={() => setShowSearchModal(false)}
-        onSelectDestination={showLocationPreviewModal} // CAMBIO: Ahora muestra preview
-      />
+          <SearchModal
+            visible={showSearchModal}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onClose={() => setShowSearchModal(false)}
+            onSelectDestination={showLocationPreviewModal}
+          />
 
-      {/* NUEVO: Modal de preview de ubicación */}
-      <LocationPreviewModal
-        visible={showLocationPreview}
-        location={previewLocation}
-        userLocation={location}
-        onClose={() => {
-          setShowLocationPreview(false);
-          setPreviewLocation(null);
-        }}
-        onStartNavigation={startNavigation}
-      />
+          <LocationPreviewModal
+            visible={showLocationPreview}
+            location={previewLocation}
+            userLocation={location}
+            onClose={() => {
+              setShowLocationPreview(false);
+              setPreviewLocation(null);
+            }}
+            onStartNavigation={startNavigation}
+          />
+        </>
+      )}
     </SafeAreaView>
   );
 };
