@@ -1,0 +1,72 @@
+
+export const modalStyles = {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: 'rgba(17, 24, 39, 0.98)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    borderTopWidth: 3,
+    borderTopColor: '#3b82f6',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    gap: 15,
+  },
+  descriptionContainer: {
+    marginVertical: 10,
+  },
+  descriptionLabel: {
+    color: '#d1d5db',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  additionalInfo: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '500',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(55, 65, 81, 0.5)',
+    borderRadius: 8,
+  },
+  closeModalButton: {
+    backgroundColor: '#3b82f6',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  closeModalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+};

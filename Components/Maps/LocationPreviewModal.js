@@ -10,7 +10,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import {locationPreviewStyles as styles } from '../../styles/LocalPrevStyles';
+import {locationPreviewStyles as styles } from '../../styles/stylesComponentsMap/LocalPrevStyles';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk';
 const { width: screenWidth } = Dimensions.get('window');
