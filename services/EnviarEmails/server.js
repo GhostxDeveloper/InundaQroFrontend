@@ -4,9 +4,34 @@ import { createTransport } from "nodemailer";
 import { initializeApp, applicationDefault, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import bcrypt from "bcryptjs";
-import { createRequire } from "module"; // <--- AGREGA ESTA LÍNEA
-const require = createRequire(import.meta.url);
-const serviceAccount = require("./inundaqro-f2dfa-firebase-adminsdk-fbsvc-592ba6116f.json")
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Cargar las credenciales de Firebase
+let serviceAccount;
+try {
+  // Ruta corregida: subir 3 niveles para llegar a firebase-credentials
+  const serviceAccountPath = join(
+    __dirname,
+    "../../../firebase-credentials/inundaqro-f2dfa-firebase-adminsdk-fbsvc-592ba6116f.json"
+  );
+  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
+  console.log("Firebase credentials loaded successfully");
+} catch (error) {
+  console.error("Error loading Firebase credentials:", error.message);
+  console.log(
+    "Make sure the Firebase service account key file exists at:",
+    join(
+      __dirname,
+      "../../../firebase-credentials/inundaqro-f2dfa-firebase-adminsdk-fbsvc-592ba6116f.json"
+    )
+  );
+  process.exit(1);
+}
 
 const app = express();
 app.use(cors());
@@ -64,7 +89,5 @@ app.post("/reset-password", async (req, res) => {
     res.status(500).json({ success: false, error: e.message });
   }
 });
-
-
 
 app.listen(3001, () => console.log("Servidor corriendo en puerto 3001"));
