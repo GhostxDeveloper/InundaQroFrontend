@@ -9,6 +9,7 @@ import PrediccionesScreen from "../pages/PrediccionesScreen";
 import LoginScreen from "../pages/auth/Login";
 import WelcomeScreen from "../pages/auth/Welcome";
 import RegisterScreen from "../pages/auth/Register";
+import ForgotPasswordScreen from "../pages/auth/ForgotPassword";
 
 const Stack = createStackNavigator();
 
@@ -42,11 +43,15 @@ export default function Routes() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="Mapa"
           component={MapScreen}
           options={{ title: "Mapa de Inundaciones", headerShown: false }}
         />
-
         <Stack.Screen
           name="ReportarInundacion"
           component={ReportarInundacion}

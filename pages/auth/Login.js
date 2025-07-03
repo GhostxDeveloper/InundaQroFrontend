@@ -6,9 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { loginUser } from "../../services/usersService"; // Asegúrate de que esta ruta sea correcta
+import { loginUser } from "../../services/usersService";
+import * as Notifications from "expo-notifications";
+
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
+const validatePassword = (password) => {
+  const re = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+  return re.test(password);
+};
 
 export default function LoginScreen({ navigation }) {
   const [secure, setSecure] = useState(true);
@@ -18,26 +30,47 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setError(error);
-    setError(null);
+    setError("");
+    if (!validateEmail(email)) {
+      setError("Ingresa un email válido.");
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError(
+        "La contraseña debe tener al menos 8 caracteres, un número y un carácter especial."
+      );
+      return;
+    }
+    setLoading(true);
     const result = await loginUser({ email, password });
     setLoading(false);
 
     if (result.success) {
-      // Aquí puedes manejar el éxito del login, por ejemplo, redirigir al usuario a la pantalla principal
-      navigation.navigate("Home"); // Asegúrate de que "Home" sea el nombre correcto de tu pantalla principal
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Inicio de sesión exitoso",
+          body: `Bienvenido de nuevo, ${email}!`,
+        },
+        trigger: null,
+      });
+      navigation.navigate("Home");
     } else {
-      console.log("Error en login:", result); // Para depuración
-      setError(result.error || "Error al iniciar sesión.");
+      setError(result.error || "Contraseña o usuario no encontrado.");
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Error de inicio de sesión",
+          body: result.error || "Contraseña o usuario no encontrado.",
+        },
+        trigger: null,
+      });
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Logo en el centro superior */}
       <View style={styles.logoContainer}>
         <Image
-          source={require("../../assets/logo.png")} // Cambia la ruta al logo real de tu proyecto
+          source={require("../../assets/logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -77,6 +110,21 @@ export default function LoginScreen({ navigation }) {
           </View>
         </View>
 
+        <TouchableOpacity
+          style={{ alignSelf: "flex-end", marginBottom: 10 }}
+          onPress={() => navigation.navigate("ForgotPassword")}
+        >
+          <Text
+            style={{
+              color: "#007AFF",
+              fontSize: 15,
+              textDecorationLine: "underline",
+            }}
+          >
+            ¿Olvidaste tu contraseña?
+          </Text>
+        </TouchableOpacity>
+
         <Text style={styles.registerText}>
           ¿No tienes cuenta?{" "}
           <TouchableOpacity onPress={() => navigation.navigate("Register")}>
@@ -84,13 +132,18 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </Text>
 
+        {error ? (
+          <Text style={{ color: "red", textAlign: "center", marginBottom: 10 }}>
+            {error}
+          </Text>
+        ) : null}
         <TouchableOpacity
-          style={styles.loginButton}
+          style={[styles.loginButton, loading && { opacity: 0.6 }]}
           onPress={handleLogin}
           disabled={loading}
         >
           <Text style={styles.loginText}>
-            {loading ? "Cargando..." : "Login"}
+            {loading ? "Iniciando sesión..." : "Login"}
           </Text>
         </TouchableOpacity>
       </View>

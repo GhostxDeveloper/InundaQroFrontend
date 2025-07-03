@@ -16,35 +16,63 @@ export default function RegisterScreen({ navigation }) {
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [telefono, setTelefono] = useState(""); // <-- Nuevo estado
+  const [telefono, setTelefono] = useState(""); 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Para verificación
   const [step, setStep] = useState(1);
   const [verificationCode, setVerificationCode] = useState("");
   const [sentCode, setSentCode] = useState("");
 
-  // Envía el código al correo
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePassword = (password) => {
+    const re = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    return re.test(password);
+  };
+
+  const validatePhone = (phone) => {
+    const re = /^\d{8,}$/;
+    return re.test(phone);
+  };
+
   const sendVerificationCode = async () => {
     setError("");
-    if (!nombre || !email || !telefono || !password || !confirmPassword) {
-      setError("Por favor, completa todos los campos.");
+    if (!nombre.trim()) {
+      setError("El nombre es obligatorio.");
+      return;
+    }
+    if (!email.trim() || !validateEmail(email)) {
+      setError("Ingresa un email válido.");
+      return;
+    }
+    if (!telefono.trim() || !validatePhone(telefono)) {
+      setError("Ingresa un número de teléfono válido (solo números, mínimo 8 dígitos).");
+      return;
+    }
+    if (!password) {
+      setError("La contraseña es obligatoria.");
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError("La contraseña debe tener al menos 8 caracteres, un número y un carácter especial.");
       return;
     }
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
       return;
     }
-    // Genera código de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setSentCode(code);
 
     try {
       const response = await fetch(
-        "http://192.168.100.47:3001/send-code", // <-- Pega aquí tu URL real
+        "http://10.13.14.192:3001/send-code", 
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -153,7 +181,7 @@ export default function RegisterScreen({ navigation }) {
                   placeholder="Ingresa tu Contraseña"
                   placeholderTextColor="#aaa"
                   secureTextEntry={secure}
-                  value={password}
+                  value={password}nio pero sin conolocarla 
                   onChangeText={setPassword}
                 />
                 <TouchableOpacity
