@@ -6,9 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as Notifications from "expo-notifications";
 import { registerUser } from "../../services/usersService";
+import CONFIG from "../../config";
 
 export default function RegisterScreen({ navigation }) {
   const [secure, setSecure] = useState(true);
@@ -16,7 +20,7 @@ export default function RegisterScreen({ navigation }) {
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [telefono, setTelefono] = useState(""); 
+  const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -52,7 +56,9 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
     if (!telefono.trim() || !validatePhone(telefono)) {
-      setError("Ingresa un número de teléfono válido (solo números, mínimo 8 dígitos).");
+      setError(
+        "Ingresa un número de teléfono válido (solo números, mínimo 8 dígitos)."
+      );
       return;
     }
     if (!password) {
@@ -60,7 +66,9 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
     if (!validatePassword(password)) {
-      setError("La contraseña debe tener al menos 8 caracteres, un número y un carácter especial.");
+      setError(
+        "La contraseña debe tener al menos 8 caracteres, un número y un carácter especial."
+      );
       return;
     }
     if (password !== confirmPassword) {
@@ -71,17 +79,14 @@ export default function RegisterScreen({ navigation }) {
     setSentCode(code);
 
     try {
-      const response = await fetch(
-        "http://10.13.14.192:3001/send-code", 
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: email,
-            code: code,
-          }),
-        }
-      );
+      const response = await fetch(`${CONFIG.API_BASE_URL}/send-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          code: code,
+        }),
+      });
 
       if (!response.ok) {
         const data = await response.text();
@@ -121,143 +126,172 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={styles.innerContainer}>
-        <Text style={styles.subtitle}>Crear cuenta</Text>
-        {error ? (
-          <Text style={{ color: "red", textAlign: "center", marginBottom: 10 }}>
-            {error}
-          </Text>
-        ) : null}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        enableOnAndroid={true}
+      >
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.innerContainer}>
+          <Text style={styles.subtitle}>Crear cuenta</Text>
+          {error ? (
+            <Text
+              style={{ color: "red", textAlign: "center", marginBottom: 10 }}
+            >
+              {error}
+            </Text>
+          ) : null}
 
-        {step === 1 ? (
-          <>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Nombre completo</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingresa tu nombre completo"
-                placeholderTextColor="#aaa"
-                value={nombre}
-                onChangeText={setNombre}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingresa tu Email"
-                placeholderTextColor="#aaa"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Teléfono</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingresa tu número de teléfono"
-                placeholderTextColor="#aaa"
-                keyboardType="phone-pad"
-                value={telefono}
-                onChangeText={setTelefono}
-                maxLength={15}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Contraseña</Text>
-              <View style={styles.passwordRow}>
+          {step === 1 ? (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Nombre completo</Text>
                 <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Ingresa tu Contraseña"
+                  style={styles.input}
+                  placeholder="Ingresa tu nombre completo"
                   placeholderTextColor="#aaa"
-                  secureTextEntry={secure}
-                  value={password}nio pero sin conolocarla 
-                  onChangeText={setPassword}
+                  value={nombre}
+                  onChangeText={setNombre}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
                 />
-                <TouchableOpacity
-                  onPress={() => setSecure(!secure)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={{ color: "#aaa", fontSize: 18 }}>
-                    {secure ? "🙈" : "🐵"}
-                  </Text>
-                </TouchableOpacity>
               </View>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirmar Contraseña</Text>
-              <View style={styles.passwordRow}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Confirma tu Contraseña"
+                  style={styles.input}
+                  placeholder="Ingresa tu Email"
                   placeholderTextColor="#aaa"
-                  secureTextEntry={confirmSecure}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
                 />
-                <TouchableOpacity
-                  onPress={() => setConfirmSecure(!confirmSecure)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={{ color: "#aaa", fontSize: 18 }}>
-                    {confirmSecure ? "🙈" : "🐵"}
-                  </Text>
-                </TouchableOpacity>
               </View>
-            </View>
-            <Text style={styles.registerText}>
-              ¿Ya tienes cuenta?{" "}
-              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                <Text style={styles.registerLink}>Inicia sesión</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Teléfono</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu número de teléfono"
+                  placeholderTextColor="#aaa"
+                  keyboardType="phone-pad"
+                  value={telefono}
+                  onChangeText={setTelefono}
+                  maxLength={15}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                />
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Contraseña</Text>
+                <View style={styles.passwordRow}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Ingresa tu Contraseña"
+                    placeholderTextColor="#aaa"
+                    secureTextEntry={secure}
+                    value={password}
+                    onChangeText={setPassword}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setSecure(!secure)}
+                    style={styles.eyeButton}
+                  >
+                    <Text style={{ color: "#aaa", fontSize: 18 }}>
+                      {secure ? "🙈" : "🐵"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirmar Contraseña</Text>
+                <View style={styles.passwordRow}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Confirma tu Contraseña"
+                    placeholderTextColor="#aaa"
+                    secureTextEntry={confirmSecure}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setConfirmSecure(!confirmSecure)}
+                    style={styles.eyeButton}
+                  >
+                    <Text style={{ color: "#aaa", fontSize: 18 }}>
+                      {confirmSecure ? "🙈" : "🐵"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <Text style={styles.registerText}>
+                ¿Ya tienes cuenta?{" "}
+                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                  <Text style={styles.registerLink}>Inicia sesión</Text>
+                </TouchableOpacity>
+              </Text>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={sendVerificationCode}
+                disabled={loading}
+              >
+                <Text style={styles.loginText}>
+                  {loading
+                    ? "Enviando código..."
+                    : "Enviar código de verificación"}
+                </Text>
               </TouchableOpacity>
-            </Text>
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={sendVerificationCode}
-              disabled={loading}
-            >
-              <Text style={styles.loginText}>
-                {loading
-                  ? "Enviando código..."
-                  : "Enviar código de verificación"}
+            </>
+          ) : (
+            <>
+              <Text style={{ marginBottom: 10 }}>
+                Ingresa el código enviado a tu correo
               </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <Text style={{ marginBottom: 10 }}>
-              Ingresa el código enviado a tu correo
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Código de verificación"
-              value={verificationCode}
-              onChangeText={setVerificationCode}
-              keyboardType="numeric"
-            />
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={handleVerifyAndRegister}
-              disabled={loading}
-            >
-              <Text style={styles.loginText}>
-                {loading ? "Registrando..." : "Verificar y registrar"}
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-    </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Código de verificación"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                keyboardType="numeric"
+                returnKeyType="done"
+                maxLength={6}
+                textAlign="center"
+              />
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleVerifyAndRegister}
+                disabled={loading}
+              >
+                <Text style={styles.loginText}>
+                  {loading ? "Registrando..." : "Verificar y registrar"}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -265,19 +299,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    justifyContent: "flex-start",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 100, // Más espacio al final para el teclado
+    minHeight: "100%",
   },
   logoContainer: {
     alignItems: "center",
     marginTop: 60,
+    marginBottom: 20,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
   },
   innerContainer: {
-    marginTop: -50,
+    marginTop: -30,
     padding: 26,
+    paddingBottom: 50, // Más espacio al final
   },
   subtitle: {
     fontSize: 22,

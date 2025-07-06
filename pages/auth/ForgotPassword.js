@@ -8,6 +8,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import CONFIG from "../../config";
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,7 +44,7 @@ export default function ForgotPasswordScreen() {
       100000 + Math.random() * 900000
     ).toString();
     try {
-      const response = await fetch("http://10.13.14.192:3001/send-code", {
+      const response = await fetch(CONFIG.API_BASE_URL / "send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: email, code: generatedCode }),
@@ -76,7 +77,7 @@ export default function ForgotPasswordScreen() {
     }
     setLoading(true);
     try {
-      const response = await fetch("http://10.13.14.192:3001/reset-password", {
+      const response = await fetch(CONFIG.API_BASE_URL / "reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword }),
