@@ -6,7 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { styles } from '../../styles/Mapstyles';
+import {mapHeaderStyles as styles } from '../../styles/stylesComponentsMap/MapHeaderstyles';
 
 const MapHeader = ({
   navigation,

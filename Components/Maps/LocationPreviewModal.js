@@ -10,7 +10,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { styles } from '../../styles/Mapstyles';
+import {locationPreviewStyles as styles } from '../../styles/stylesComponentsMap/LocalPrevStyles';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk';
 const { width: screenWidth } = Dimensions.get('window');
@@ -285,26 +285,7 @@ const LocationPreviewModal = ({
 
           {/* Botones de acción */}
           <View style={styles.previewButtonsContainer}>
-            <TouchableOpacity 
-              style={styles.previewSecondaryButton}
-              onPress={() => {
-                // Aquí podrías agregar funcionalidad para llamar, guardar, etc.
-                console.log('Acción secundaria');
-              }}
-            >
-              <Text style={styles.previewSecondaryButtonText}>💾 Guardar</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.previewSecondaryButton}
-              onPress={() => {
-                // Compartir ubicación
-                console.log('Compartir ubicación');
-              }}
-            >
-              <Text style={styles.previewSecondaryButtonText}>📤 Compartir</Text>
-            </TouchableOpacity>
-            
+    
             <TouchableOpacity 
               style={styles.previewPrimaryButton}
               onPress={() => {
