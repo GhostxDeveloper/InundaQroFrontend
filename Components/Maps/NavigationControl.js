@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import { styles } from '../../styles/stylesComponentsMap/NavigationControlstyles';
+import { styles } from '../../styles/Mapstyles';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD6vEAeGtBjMT1zQUlFnuvJV9YORgXSFGk';
 

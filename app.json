@@ -20,40 +20,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ],
-      "package": "com.cristiansalv.InundaQro"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#ffffff",
-          "defaultChannel": "default"
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Esta aplicación usa la ubicación para mostrar alertas de inundación en tu zona."
-        }
-      ]
-    ],
-    "notification": {
-      "icon": "./assets/notification-icon.png",
-      "color": "#ffffff"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "a48153a3-17a3-4636-b865-3fdb7fe1964f"
-      }
     }
   }
 }
