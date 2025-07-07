@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Alert,
@@ -6,51 +6,51 @@ import {
   SafeAreaView,
   StatusBar,
   Text,
-} from 'react-native';
-import * as Location from 'expo-location';
-import { styles } from '../styles/Mapstyles';
-import { 
-  getAllFloodReports, 
-  subscribeToFloodReports, 
-} from '../services/floodReportsService';
-import axios from 'axios'; // Asegúrate de tener axios instalado
+  Modal,
+} from "react-native";
+import * as Location from "expo-location";
+import { styles } from "../styles/Mapstyles";
+import {
+  getAllFloodReports,
+  subscribeToFloodReports,
+} from "../services/floodReportsService";
 
-// Componentes 
-import MapHeader from '../Components/Maps/MapHeader';
-import MapContainer from '../Components/Maps/MapContainer';
-import NavigationControls from '../Components/Maps/NavigationControl';
-import SearchModal from '../Components/Maps/SearchModal';
-import LocationPreviewModal from '../Components/Maps/LocationPreviewModal'; // Nuevo componente
+// Componentes existentes
+import MapHeader from "../Components/Maps/MapHeader";
+import MapContainer from "../Components/Maps/MapContainer";
+import NavigationControls from "../Components/Maps/NavigationControl";
+import SearchModal from "../Components/Maps/SearchModal";
+import LocationPreviewModal from "../Components/Maps/LocationPreviewModal";
+
+// Componente de navegación guiada
+import GuidedNavigation from "../Components/Maps/GuidedNavigation";
 
 const MapScreen = ({ navigation }) => {
   // Estados principales
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mapType, setMapType] = useState('standard');
-  const [destination, setDestination] = useState(null);
+  const [mapType, setMapType] = useState("standard");
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [routeDistance, setRouteDistance] = useState(null);
-  const [routeDuration, setRouteDuration] = useState(null);
-  const [currentInstruction, setCurrentInstruction] = useState('');
-  
-  // Estados para preview de ubicación (NUEVOS)
+  const [searchText, setSearchText] = useState("");
+
+  // Estados para preview de ubicación
   const [showLocationPreview, setShowLocationPreview] = useState(false);
   const [previewLocation, setPreviewLocation] = useState(null);
-  const [navigationViewType, setNavigationViewType] = useState('overview'); // 'overview' o 'firstPerson'
-  
+
+  // Estados para navegación guiada
+  const [showGuidedNavigation, setShowGuidedNavigation] = useState(false);
+  const [guidedDestination, setGuidedDestination] = useState(null);
+  const [guidedDestinationName, setGuidedDestinationName] = useState("");
+
   // Estados para reportes
   const [floodReports, setFloodReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [showFloodReports, setShowFloodReports] = useState(true);
-  const [selectedSeverityFilter, setSelectedSeverityFilter] = useState('all');
-  
+  const [selectedSeverityFilter, setSelectedSeverityFilter] = useState("all");
+
   const mapRef = useRef(null);
   const reportsUnsubscribe = useRef(null);
-  const alertSent = useRef(false);
-  const alertedFloods = useRef(new Set());
-    
+
   const initialRegion = {
     latitude: 20.5888,
     longitude: -100.38806,
@@ -62,7 +62,7 @@ const MapScreen = ({ navigation }) => {
     getCurrentLocation();
     startLocationTracking();
     loadFloodReports();
-    
+
     return () => {
       if (reportsUnsubscribe.current) {
         reportsUnsubscribe.current();
@@ -73,13 +73,13 @@ const MapScreen = ({ navigation }) => {
   const getCurrentLocation = async () => {
     try {
       setLoading(true);
-      
+
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         Alert.alert(
-          'Permisos necesarios',
-          'La app necesita acceso a tu ubicación para funcionar correctamente',
-          [{ text: 'Entendido' }]
+          "Permisos necesarios",
+          "La app necesita acceso a tu ubicación para funcionar correctamente",
+          [{ text: "Entendido" }]
         );
         setLoading(false);
         return;
@@ -98,8 +98,8 @@ const MapScreen = ({ navigation }) => {
 
       setLocation(newLocation);
     } catch (error) {
-      console.error('Error obteniendo ubicación:', error);
-      Alert.alert('Error', 'No se pudo obtener tu ubicación actual');
+      console.error("Error obteniendo ubicación:", error);
+      Alert.alert("Error", "No se pudo obtener tu ubicación actual");
       setLocation(initialRegion);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ const MapScreen = ({ navigation }) => {
 
   const startLocationTracking = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') {
+    if (status === "granted") {
       Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -131,199 +131,121 @@ const MapScreen = ({ navigation }) => {
   const loadFloodReports = async () => {
     try {
       setLoadingReports(true);
-      
+
       reportsUnsubscribe.current = subscribeToFloodReports((reports) => {
         setFloodReports(reports);
         setLoadingReports(false);
       });
-      
     } catch (error) {
-      console.error('Error cargando reportes:', error);
+      console.error("Error cargando reportes:", error);
       setLoadingReports(false);
-      
+
       try {
         const reports = await getAllFloodReports();
         setFloodReports(reports);
       } catch (fallbackError) {
-        console.error('Error en fallback:', fallbackError);
-        Alert.alert('Error', 'No se pudieron cargar los reportes de inundación');
+        console.error("Error en fallback:", fallbackError);
+        Alert.alert(
+          "Error",
+          "No se pudieron cargar los reportes de inundación"
+        );
       }
     }
   };
 
   const getFilteredReports = () => {
-    if (selectedSeverityFilter === 'all') {
+    if (selectedSeverityFilter === "all") {
       return floodReports;
     }
-    return floodReports.filter(report => report.severityLevel === selectedSeverityFilter);
+    return floodReports.filter(
+      (report) => report.severityLevel === selectedSeverityFilter
+    );
   };
 
-  // NUEVA FUNCIÓN: Mostrar preview en lugar de navegar inmediatamente
+  // Función para mostrar preview de ubicación
   const showLocationPreviewModal = (location) => {
     setPreviewLocation(location);
     setShowLocationPreview(true);
     setSearchText(location.name);
     setShowSearchModal(false);
-    
+
     // Centrar el mapa en la ubicación seleccionada
     if (mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: location.coordinate.latitude,
-        longitude: location.coordinate.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }, 1000);
+      mapRef.current.animateToRegion(
+        {
+          latitude: location.coordinate.latitude,
+          longitude: location.coordinate.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
     }
   };
 
-  // FUNCIÓN MODIFICADA: Iniciar navegación desde el preview
+  // Función para iniciar navegación guiada directamente
   const startNavigation = (destinationCoord, destinationName) => {
     if (!location) {
-      Alert.alert('Error', 'No se pudo obtener tu ubicación actual');
+      Alert.alert("Error", "No se pudo obtener tu ubicación actual");
       return;
     }
 
-    setDestination(destinationCoord);
-    setIsNavigating(true);
-    setNavigationViewType('firstPerson'); // Cambiar a vista en primera persona
-    setCurrentInstruction(`Navegando hacia ${destinationName}`);
-    setPreviewLocation(null); // Limpiar preview
+    // Configurar datos para navegación guiada
+    setGuidedDestination(destinationCoord);
+    setGuidedDestinationName(destinationName);
+    setShowGuidedNavigation(true);
 
-    // Ajustar vista del mapa para navegación
-    if (mapRef.current) {
-      // Cambiar a vista de primera persona
-      setTimeout(() => {
-        mapRef.current.animateCamera({
-          center: location,
-          pitch: 60,
-          heading: 0,
-          altitude: 500,
-          zoom: 18,
-        }, 1000);
-      }, 500);
-    }
+    // Limpiar estados del preview
+    setShowLocationPreview(false);
+    setPreviewLocation(null);
+    setSearchText("");
   };
 
-  const stopNavigation = () => {
-    setDestination(null);
-    setIsNavigating(false);
-    setNavigationViewType('overview'); // Volver a vista general
-    setRouteDistance(null);
-    setRouteDuration(null);
-    setCurrentInstruction('');
-    setSearchText('');
-    
-    // Volver a vista normal
-    if (mapRef.current && location) {
-      mapRef.current.animateCamera({
-        center: location,
-        pitch: 0,
-        heading: 0,
-        altitude: 1000,
-        zoom: 15,
-      }, 1000);
-    }
+  // Función para completar navegación guiada
+  const handleGuidedNavigationComplete = () => {
+    setShowGuidedNavigation(false);
+    setGuidedDestination(null);
+    setGuidedDestinationName("");
+
+    Alert.alert("¡Llegaste a tu destino!", "¿Cómo estuvo tu viaje?", [
+      { text: "Excelente", onPress: () => console.log("Feedback: Excelente") },
+      { text: "Bien", onPress: () => console.log("Feedback: Bien") },
+      { text: "Cerrar", style: "cancel" },
+    ]);
   };
 
-  const centerOnUserLocation = () => {
-    if (location && mapRef.current) {
-      if (isNavigating && navigationViewType === 'firstPerson') {
-        // En navegación, mantener vista en primera persona
-        mapRef.current.animateCamera({
-          center: location,
-          pitch: 60,
-          heading: 0,
-          altitude: 500,
-          zoom: 18,
-        }, 1000);
-      } else {
-        // Vista normal
-        mapRef.current.animateToRegion({
-          ...location,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }, 1000);
-      }
-    }
-  };
-
-  const handleDirectionsReady = (result) => {
-    setRouteDistance(result.distance.toFixed(1) + ' km');
-    setRouteDuration(Math.round(result.duration) + ' min');
-  };
-
-  const handleDirectionsError = (errorMessage) => {
-    console.error('Error en direcciones:', errorMessage);
+  // Función para cancelar navegación guiada
+  const handleGuidedNavigationCancel = () => {
     Alert.alert(
-      'Error de navegación', 
-      'No se pudo calcular la ruta. Verifica tu conexión a internet.',
+      "Cancelar navegación",
+      "¿Estás seguro de que quieres cancelar la navegación?",
       [
-        { text: 'Reintentar', onPress: () => {
-          if (destination) {
-            setIsNavigating(false);
-            setTimeout(() => setIsNavigating(true), 500);
-          }
-        }},
-        { text: 'Cancelar', onPress: stopNavigation }
+        { text: "No", style: "cancel" },
+        {
+          text: "Sí, cancelar",
+          onPress: () => {
+            setShowGuidedNavigation(false);
+            setGuidedDestination(null);
+            setGuidedDestinationName("");
+          },
+        },
       ]
     );
   };
 
-  // Calcula distancia en metros entre dos coordenadas
-  const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
-    const R = 6371000;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const userPhone = '+524427167903';
-
-  const checkFloodProximity = async (userLocation, floodReports, userPhone) => {
-    let foundNear = false;
-    for (const report of floodReports) {
-      if (report.severityLevel === 'Severo') {
-        const distance = getDistanceMeters(
-          userLocation.latitude,
-          userLocation.longitude,
-          report.location.latitude,
-          report.location.longitude
-        );
-        if (distance <= 500 ) {
-          foundNear = true;
-          if (!alertedFloods.current.has(report.id)) {
-            try {
-              console.log('Enviando alerta a:', userPhone, 'por reporte', report.id);
-              await axios.post('https://apicallrest.onrender.com/api/alerta-inundacion', {
-                phoneNumber: userPhone,
-                message: '¡Alerta de inundación severa! Estás cerca de una zona peligrosa. Busca un lugar seguro.'
-              });
-              alertedFloods.current.add(report.id);
-              Alert.alert('¡Alerta de inundación severa!', 'Recibirás una llamada de advertencia.');
-            } catch (error) {
-              console.error('Error enviando alerta:', error);
-            }
-          }
-          break;
-        }
-      }
-    }
-    // Si no estás cerca de ningún reporte, limpia el set para permitir alertas futuras
-    if (!foundNear) {
-      alertedFloods.current.clear();
+  const centerOnUserLocation = () => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          ...location,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
     }
   };
 
-  useEffect(() => {
-    if (location && floodReports.length > 0) {
-      checkFloodProximity(location, floodReports, userPhone);
-    }
-  }, [location, floodReports]);
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -336,67 +258,77 @@ const MapScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4285F4" barStyle="light-content" />
-      
-      <MapHeader
-        navigation={navigation}
-        searchText={searchText}
-        mapType={mapType}
-        setMapType={setMapType}
-        setShowSearchModal={setShowSearchModal}
-        floodReports={floodReports}
-        selectedSeverityFilter={selectedSeverityFilter}
-        setSelectedSeverityFilter={setSelectedSeverityFilter}
-        loadingReports={loadingReports}
-      />
 
-      <MapContainer
-        mapRef={mapRef}
-        location={location}
-        initialRegion={initialRegion}
-        mapType={mapType}
-        destination={destination}
-        isNavigating={isNavigating}
-        showFloodReports={showFloodReports}
-        filteredReports={getFilteredReports()}
-        onDirectionsReady={handleDirectionsReady}
-        onDirectionsError={handleDirectionsError}
-        previewLocation={previewLocation} // Nueva prop
-        navigationViewType={navigationViewType} // Nueva prop
-      />
+      {showGuidedNavigation ? (
+        <Modal
+          visible={showGuidedNavigation}
+          animationType="slide"
+          presentationStyle="fullScreen"
+        >
+          <GuidedNavigation
+            origin={location}
+            destination={guidedDestination}
+            destinationName={guidedDestinationName}
+            onNavigationComplete={handleGuidedNavigationComplete}
+            onNavigationCancel={handleGuidedNavigationCancel}
+            mapType={mapType}
+            showTraffic={true}
+            showFloodReports={showFloodReports} // Pasar el estado de reportes
+            selectedSeverityFilter={selectedSeverityFilter} // Pasar el filtro de severidad
+          />
+        </Modal>
+      ) : (
+        <>
+          {/* Interfaz normal del mapa */}
+          <MapHeader
+            navigation={navigation}
+            searchText={searchText}
+            mapType={mapType}
+            setMapType={setMapType}
+            setShowSearchModal={setShowSearchModal}
+            floodReports={floodReports}
+            selectedSeverityFilter={selectedSeverityFilter}
+            setSelectedSeverityFilter={setSelectedSeverityFilter}
+            loadingReports={loadingReports}
+          />
 
-      <NavigationControls
-        isNavigating={isNavigating}
-        showFloodReports={showFloodReports}
-        setShowFloodReports={setShowFloodReports}
-        routeDistance={routeDistance}
-        routeDuration={routeDuration}
-        currentInstruction={currentInstruction}
-        onCenterLocation={centerOnUserLocation}
-        onStopNavigation={stopNavigation}
-        loadingReports={loadingReports}
-        navigationViewType={navigationViewType} // Nueva prop
-        setNavigationViewType={setNavigationViewType} // Nueva prop
-      />
+          <MapContainer
+            mapRef={mapRef}
+            location={location}
+            initialRegion={initialRegion}
+            mapType={mapType}
+            showFloodReports={showFloodReports}
+            filteredReports={getFilteredReports()}
+            previewLocation={previewLocation}
+          />
 
-      <SearchModal
-        visible={showSearchModal}
-        searchText={searchText}
-        setSearchText={setSearchText}
-        onClose={() => setShowSearchModal(false)}
-        onSelectDestination={showLocationPreviewModal} // CAMBIO: Ahora muestra preview
-      />
+          <NavigationControls
+            showFloodReports={showFloodReports}
+            setShowFloodReports={setShowFloodReports}
+            onCenterLocation={centerOnUserLocation}
+            loadingReports={loadingReports}
+          />
 
-      {/* NUEVO: Modal de preview de ubicación */}
-      <LocationPreviewModal
-        visible={showLocationPreview}
-        location={previewLocation}
-        userLocation={location}
-        onClose={() => {
-          setShowLocationPreview(false);
-          setPreviewLocation(null);
-        }}
-        onStartNavigation={startNavigation}
-      />
+          <SearchModal
+            visible={showSearchModal}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onClose={() => setShowSearchModal(false)}
+            onSelectDestination={showLocationPreviewModal}
+          />
+
+          <LocationPreviewModal
+            visible={showLocationPreview}
+            location={previewLocation}
+            userLocation={location}
+            onClose={() => {
+              setShowLocationPreview(false);
+              setPreviewLocation(null);
+            }}
+            onStartNavigation={startNavigation}
+          />
+        </>
+      )}
     </SafeAreaView>
   );
 };
