@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== Script para hacer merge seguro de ponceimplements con main ==="
+echo "=== Script para hacer merge seguro de ponceImplements con main ==="
 echo
 
 # Verificar que estamos en el directorio correcto
@@ -14,23 +14,23 @@ git status
 echo
 echo "2. Guardando cambios actuales si los hay..."
 git add .
-git commit -m "Guardando cambios antes del merge con ponceimplements" || echo "No hay cambios para commitear"
+git commit -m "Guardando cambios antes del merge con ponceImplements" || echo "No hay cambios para commitear"
 
 echo
 echo "3. Verificando ramas disponibles..."
 git branch -a
 
 echo
-echo "4. Verificando si existe la rama ponceimplements..."
-if git show-ref --verify --quiet refs/heads/ponceimplements; then
-    echo "✓ La rama ponceimplements existe localmente"
-elif git show-ref --verify --quiet refs/remotes/origin/ponceimplements; then
-    echo "✓ La rama ponceimplements existe en el remoto"
+echo "4. Verificando si existe la rama ponceImplements..."
+if git show-ref --verify --quiet refs/heads/ponceImplements; then
+    echo "✓ La rama ponceImplements existe localmente"
+elif git show-ref --verify --quiet refs/remotes/origin/ponceImplements; then
+    echo "✓ La rama ponceImplements existe en el remoto"
     echo "Creando rama local desde el remoto..."
-    git checkout -b ponceimplements origin/ponceimplements
+    git checkout -b ponceImplements origin/ponceImplements
     git checkout main
 else
-    echo "❌ Error: La rama ponceimplements no existe"
+    echo "❌ Error: La rama ponceImplements no existe"
     echo "Ramas disponibles:"
     git branch -a
     exit 1
@@ -50,11 +50,11 @@ echo "Creando un punto de respaldo..."
 git tag backup-before-merge-$(date +%Y%m%d-%H%M%S) || echo "Tag de respaldo creado"
 
 echo
-echo "8. Haciendo merge de ponceimplements..."
+echo "8. Haciendo merge de ponceImplements..."
 echo "Esto intentará hacer un merge sin fast-forward para mantener el historial"
 
 # Intentar merge automático primero
-if git merge ponceimplements --no-ff -m "Merge de rama ponceimplements"; then
+if git merge ponceImplements --no-ff -m "Merge de rama ponceImplements"; then
     echo "✓ Merge completado exitosamente sin conflictos!"
     echo
     echo "9. Verificando el resultado..."
