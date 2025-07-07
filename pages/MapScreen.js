@@ -13,6 +13,7 @@ import {
   getAllFloodReports, 
   subscribeToFloodReports, 
 } from '../services/floodReportsService';
+import axios from 'axios'; // Asegúrate de tener axios instalado
 
 // Componentes 
 import MapHeader from '../Components/Maps/MapHeader';
@@ -47,6 +48,8 @@ const MapScreen = ({ navigation }) => {
   
   const mapRef = useRef(null);
   const reportsUnsubscribe = useRef(null);
+  const alertSent = useRef(false);
+  const alertedFloods = useRef(new Set());
     
   const initialRegion = {
     latitude: 20.5888,
@@ -266,6 +269,61 @@ const MapScreen = ({ navigation }) => {
     );
   };
 
+  // Calcula distancia en metros entre dos coordenadas
+  const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const userPhone = '+524427167903';
+
+  const checkFloodProximity = async (userLocation, floodReports, userPhone) => {
+    let foundNear = false;
+    for (const report of floodReports) {
+      if (report.severityLevel === 'Severo') {
+        const distance = getDistanceMeters(
+          userLocation.latitude,
+          userLocation.longitude,
+          report.location.latitude,
+          report.location.longitude
+        );
+        if (distance <= 500 ) {
+          foundNear = true;
+          if (!alertedFloods.current.has(report.id)) {
+            try {
+              console.log('Enviando alerta a:', userPhone, 'por reporte', report.id);
+              await axios.post('https://apicallrest.onrender.com/api/alerta-inundacion', {
+                phoneNumber: userPhone,
+                message: '¡Alerta de inundación severa! Estás cerca de una zona peligrosa. Busca un lugar seguro.'
+              });
+              alertedFloods.current.add(report.id);
+              Alert.alert('¡Alerta de inundación severa!', 'Recibirás una llamada de advertencia.');
+            } catch (error) {
+              console.error('Error enviando alerta:', error);
+            }
+          }
+          break;
+        }
+      }
+    }
+    // Si no estás cerca de ningún reporte, limpia el set para permitir alertas futuras
+    if (!foundNear) {
+      alertedFloods.current.clear();
+    }
+  };
+
+  useEffect(() => {
+    if (location && floodReports.length > 0) {
+      checkFloodProximity(location, floodReports, userPhone);
+    }
+  }, [location, floodReports]);
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
