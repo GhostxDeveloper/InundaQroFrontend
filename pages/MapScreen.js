@@ -281,7 +281,7 @@ const MapScreen = ({ navigation }) => {
         console.log(
           `[ALERTA] Reporte ID: ${report.id} | Distancia: ${distance.toFixed(2)}m | Ya alertado: ${alertedFloods.current.has(report.id)}`
         );
-        if (distance <= 66) {
+        if (distance <= 500) {
           foundNear = true;
           if (!alertedFloods.current.has(report.id)) {
             try {
