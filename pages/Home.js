@@ -319,29 +319,3 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
 };
 
 export default HomeScreen;
-
-// import React from "react";
-// import { View, Text, StyleSheet } from "react-native";
-
-// export default function HomeScreen() {
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.welcomeText}>¡Bienvenido a Home!</Text>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     backgroundColor: "#fff",
-//   },
-//   welcomeText: {
-//     fontSize: 26,
-//     fontWeight: "bold",
-//     color: "#1e40af",
-//     textAlign: "center",
-//   },
-// });

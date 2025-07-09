@@ -1,16 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Image,
   Alert,
+  Dimensions,
+  StatusBar,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { loginUser } from "../../services/usersService";
 import * as Notifications from "expo-notifications";
+import { LinearGradient } from 'expo-linear-gradient';
+import { styles } from '../../styles/LoginStyles'; // Importar los estilos
+
+const { width, height } = Dimensions.get("window");
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,6 +37,75 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Animaciones
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const inputAnim = useRef(new Animated.Value(0)).current;
+  const buttonAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Secuencia de animaciones
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(inputAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Animación de flotación continua
+    const floatAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    floatAnimation.start();
+
+    return () => {
+      floatAnimation.stop();
+    };
+  }, []);
+
+  const floatTranslateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -8],
+  });
 
   const handleLogin = async () => {
     setError("");
@@ -67,168 +145,213 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={styles.innerContainer}>
-        <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ingresa tu Email"
-            placeholderTextColor="#aaa"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Contraseña</Text>
-          <View style={styles.passwordRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Ingresa tu Contraseña"
-              placeholderTextColor="#aaa"
-              secureTextEntry={secure}
-              value={password}
-              onChangeText={setPassword}
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <StatusBar backgroundColor="#E0F2FE" barStyle="dark-content" />
+      
+      {/* Fondo con gradiente */}
+      <LinearGradient
+        colors={['#E0F2FE', '#BAE6FD', '#7DD3FC']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      />
+
+      {/* Elementos decorativos de fondo */}
+      <Animated.View
+        style={[
+          styles.backgroundCircle,
+          styles.circle1,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.backgroundCircle,
+          styles.circle2,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.backgroundCircle,
+          styles.circle3,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+
+      {/* Gotas decorativas */}
+      <Animated.View
+        style={[
+          styles.drop,
+          styles.drop1,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.drop,
+          styles.drop2,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+
+      {/* Ondas decorativas */}
+      <Animated.View
+        style={[
+          styles.wave,
+          styles.wave1,
+          { transform: [{ translateY: floatTranslateY }] },
+        ]}
+      />
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo */}
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { scale: scaleAnim },
+                { translateY: floatTranslateY }
+              ]
+            }
+          ]}
+        >
+          <View style={styles.logoShadow}>
+            <Image
+              source={require("../../assets/logo.png")}
+              style={styles.logo}
+              resizeMode="contain"
             />
+          </View>
+        </Animated.View>
+
+        {/* Contenedor principal */}
+        <Animated.View
+          style={[
+            styles.innerContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
+          
+          {/* Inputs con animación */}
+          <Animated.View
+            style={[
+              styles.inputsContainer,
+              {
+                opacity: inputAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu Email"
+                  placeholderTextColor="#94A3B8"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Ingresa tu Contraseña"
+                  placeholderTextColor="#94A3B8"
+                  secureTextEntry={secure}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setSecure(!secure)}
+                  style={styles.eyeButton}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.eyeIcon}>
+                    {secure ? "🙈" : "🐵"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <TouchableOpacity
-              onPress={() => setSecure(!secure)}
-              style={styles.eyeButton}
+              style={styles.forgotPasswordButton}
+              onPress={() => navigation.navigate("ForgotPassword")}
+              activeOpacity={0.7}
             >
-              <Text style={{ color: "#aaa", fontSize: 18 }}>
-                {secure ? "🙈" : "🐵"}
+              <Text style={styles.forgotPasswordText}>
+                ¿Olvidaste tu contraseña?
               </Text>
             </TouchableOpacity>
-          </View>
-        </View>
 
-        <TouchableOpacity
-          style={{ alignSelf: "flex-end", marginBottom: 10 }}
-          onPress={() => navigation.navigate("ForgotPassword")}
-        >
-          <Text
-            style={{
-              color: "#007AFF",
-              fontSize: 15,
-              textDecorationLine: "underline",
-            }}
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>
+                ¿No tienes cuenta?{" "}
+              </Text>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate("Register")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.registerLink}>Regístrate</Text>
+              </TouchableOpacity>
+            </View>
+
+            {error ? (
+              <Animated.View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </Animated.View>
+            ) : null}
+          </Animated.View>
+
+          {/* Botón de login */}
+          <Animated.View
+            style={[
+              styles.buttonContainer,
+              {
+                opacity: buttonAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
           >
-            ¿Olvidaste tu contraseña?
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.registerText}>
-          ¿No tienes cuenta?{" "}
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.registerLink}>Regístrate</Text>
-          </TouchableOpacity>
-        </Text>
-
-        {error ? (
-          <Text style={{ color: "red", textAlign: "center", marginBottom: 10 }}>
-            {error}
-          </Text>
-        ) : null}
-        <TouchableOpacity
-          style={[styles.loginButton, loading && { opacity: 0.6 }]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.loginText}>
-            {loading ? "Iniciando sesión..." : "Login"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+            <TouchableOpacity
+              style={[styles.loginButton, loading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#0EA5E9', '#3B82F6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Text style={styles.loginText}>
+                  {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "flex-start",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginTop: 60,
-  },
-  logo: {
-    width: 200,
-    height: 200,
-  },
-  innerContainer: {
-    marginTop: -50, // baja el formulario completo
-    padding: 26,
-  },
-  subtitle: {
-    fontSize: 22,
-    color: "black",
-    fontWeight: "400",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  inputContainer: {
-    marginBottom: 18,
-  },
-  label: {
-    fontSize: 13,
-    color: "#444",
-    marginBottom: 6,
-    marginLeft: 4,
-    fontWeight: "500",
-  },
-  input: {
-    backgroundColor: "#f6f6f6",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    color: "#222",
-  },
-  passwordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  eyeButton: {
-    paddingHorizontal: 10,
-    position: "absolute",
-    right: 8,
-    top: 9,
-    zIndex: 1,
-  },
-  registerText: {
-    textAlign: "center",
-    color: "#888",
-    fontSize: 15,
-    marginBottom: 15,
-    marginTop: 8,
-  },
-  registerLink: {
-    color: "#111",
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-  },
-  loginButton: {
-    backgroundColor: "#111",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  loginText: {
-    color: "#fff",
-    fontSize: 19,
-    fontWeight: "500",
-  },
-});
