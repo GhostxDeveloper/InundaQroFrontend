@@ -88,7 +88,7 @@ const SplashScreen = () => {
 
     // Redirección después de 4 segundos
     const timer = setTimeout(() => {
-      navigation.replace("Welcome"); // Cambia 'Welcome' por la pantalla a la que quieras navegar
+      navigation.replace("Home"); // Cambia 'Welcome' por la pantalla a la que quieras navegar
     }, 4000);
 
     return () => {

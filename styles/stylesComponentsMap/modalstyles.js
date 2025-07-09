@@ -1,4 +1,3 @@
-
 export const modalStyles = {
   modalOverlay: {
     flex: 1,
