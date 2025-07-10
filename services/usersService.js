@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-//const API_URL = 'https://apicallrest.onrender.com/api';
-const API_URL = 'http://192.168.1.73:3004/api';
+const API_URL = 'https://apicallrest.onrender.com/api';
+//const API_URL = 'http://192.168.1.73:3004/api';
 
 export async function verifyAndRegisterUser({ nombre, email, telefono, password, code }) {
   try {
@@ -62,5 +62,44 @@ export async function sendVerificationCodeApi({ email, code }) {
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || 'Error al enviar código');
+  }
+}
+
+export async function sendForgotPasswordCodeApi(email) {
+  try {
+    const res = await fetch(`${API_URL}/send-code-reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Error al enviar código');
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function resetPasswordApi({ email, code, newPassword }) {
+  try {
+    const res = await fetch(`${API_URL}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Error al cambiar la contraseña');
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }

@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
                 // 🔁 Borra cualquier sesión previa al iniciar
                 await AsyncStorage.removeItem("token");
                 await AsyncStorage.removeItem("user");
-                console.log("✅ Sesión eliminada al iniciar la app");
+               // console.log("✅ Sesión eliminada al iniciar la app");
             } catch (error) {
                 console.log("Error borrando sesión:", error);
             } finally {

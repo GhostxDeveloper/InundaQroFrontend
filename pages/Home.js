@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { AuthContext } from '../context/AuthContext';
 import { styles } from '../styles/Homestyles';
 import axios from 'axios';
 
@@ -29,7 +30,7 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
   });
   const [loading, setLoading] = useState(true);
   const [weatherError, setWeatherError] = useState(null);
-
+  const { logout } = useContext(AuthContext);
   // Configuración de la API
   const API_KEY = '86862d78e45e5b2b965bb7c7a40ed52a';
   const LAT = 20.5888;
@@ -146,7 +147,7 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
   const handleQuickAction = (actionId, actionTitle) => {
     switch (actionId) {
       case 1: // Reportar Inundación
-      navigation.navigate('ReportarInundacion');
+        navigation.navigate('ReportarInundacion');
         break;
       case 2: // Ver Mapa - AQUÍ ES DONDE NAVEGAMOS
         navigation.navigate('Mapa');
@@ -157,7 +158,7 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
       case 4: // Emergencias
         Alert.alert('Emergencias', 'Función próximamente');
         break;
-        case 5: // Predicciones
+      case 5: // Predicciones
         navigation.navigate('Predicciones');
         break;
       default:
@@ -188,7 +189,19 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
         <View>
           <Text style={styles.location}>📍 Querétaro, QRO</Text>
         </View>
-        <TouchableOpacity style={styles.profileButton}>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() =>
+            Alert.alert(
+              'Cerrar sesión',
+              '¿Estás seguro que deseas cerrar sesión?',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Cerrar sesión', style: 'destructive', onPress: logout },
+              ]
+            )
+          }
+        >
           <Text style={styles.profileIcon}>👤</Text>
         </TouchableOpacity>
       </View>
@@ -314,7 +327,7 @@ const HomeScreen = ({ navigation }) => { // Agregamos navigation como prop
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </View>
+    </View >
   );
 };
 
