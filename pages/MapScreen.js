@@ -20,7 +20,7 @@ import NavigationControls from "../Components/Maps/NavigationControl";
 import SearchModal from "../Components/Maps/SearchModal";
 import LocationPreviewModal from "../Components/Maps/LocationPreviewModal";
 import GuidedNavigation from "../Components/Maps/GuidedNavigation";
-import CallsComponent from "../Components/CallsComponent"; // <-- Importa el componente de llamadas
+import CallsComponent from "../Components/Maps/CallsComponent";
 
 const MapScreen = ({ navigation }) => {
   // Estados principales
