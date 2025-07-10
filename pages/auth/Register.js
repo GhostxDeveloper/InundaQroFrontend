@@ -258,6 +258,8 @@ export default function RegisterScreen({ navigation }) {
     const result = await registerUser({ nombre, email, telefono, password });
     setLoading(false);
 
+    const telefono = telefono.startsWith("+") ? telefono : `+52${telefono}`;
+
     if (result.success) {
       await Notifications.scheduleNotificationAsync({
         content: {

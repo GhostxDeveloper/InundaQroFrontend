@@ -101,6 +101,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setError("");
+
     if (!validateEmail(email)) {
       setError("Ingresa un email válido.");
       return;
@@ -111,13 +112,18 @@ export default function LoginScreen() {
       );
       return;
     }
+
     setLoading(true);
     const result = await loginUser({ email, password });
     setLoading(false);
 
     if (result.success) {
-      // Guardamos en el contexto para mantener sesión
-      await login(result.token, result.userData);  // <---- aquí
+      // 🔍 Aquí mostramos los datos antes de guardarlos
+      console.log("✅ Token recibido:", result.token);
+      console.log("✅ Usuario recibido:", result.userData);
+
+      // Guardamos en el contexto
+      await login(result.token, result.userData);
 
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -126,9 +132,13 @@ export default function LoginScreen() {
         },
         trigger: null,
       });
+
       navigation.navigate("Home");
     } else {
       setError(result.error || "Contraseña o usuario no encontrado.");
+
+      console.log("❌ Error de login:", result.error);
+
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Error de inicio de sesión",
