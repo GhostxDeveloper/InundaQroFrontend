@@ -57,8 +57,8 @@ const MapScreen = ({ navigation }) => {
   };
 
   // Teléfono del usuario (puedes cambiarlo o hacerlo dinámico)
-  const [userPhone, setUserPhone] = useState("");
-
+  //const [userPhone, setUserPhone] = useState("");
+  const userPhone = "+524427167903"
   useEffect(() => {
     const fetchUserPhone = async () => {
       const userData = await AsyncStorage.getItem("userData");

@@ -10,22 +10,19 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true); // para saber si carga la sesión
 
     useEffect(() => {
-        // Al iniciar la app, carga la sesión guardada
-        const loadStorage = async () => {
+        const resetSession = async () => {
             try {
-                const storedToken = await AsyncStorage.getItem("token");
-                const storedUser = await AsyncStorage.getItem("user");
-                if (storedToken && storedUser) {
-                    setToken(storedToken);
-                    setUser(JSON.parse(storedUser));
-                }
+                // 🔁 Borra cualquier sesión previa al iniciar
+                await AsyncStorage.removeItem("token");
+                await AsyncStorage.removeItem("user");
+                console.log("✅ Sesión eliminada al iniciar la app");
             } catch (error) {
-                console.log("Error cargando sesión:", error);
+                console.log("Error borrando sesión:", error);
             } finally {
                 setLoading(false);
             }
         };
-        loadStorage();
+        resetSession();
     }, []);
 
     const login = async (token, userData) => {
