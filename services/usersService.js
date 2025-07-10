@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-//const API_URL = 'https://apicallrest.onrender.com/api';
-const API_URL = 'http://192.168.1.73:3004/api';
+const API_URL = 'https://apicallrest.onrender.com/api';
+//const API_URL = 'http://192.168.1.73:3004/api';
 
 export async function verifyAndRegisterUser({ nombre, email, telefono, password, code }) {
   try {
