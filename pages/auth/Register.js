@@ -14,8 +14,8 @@ import {
   Dimensions,
 } from "react-native";
 import * as Notifications from "expo-notifications";
-import { registerUser } from "../../services/usersService";
-import CONFIG from "../../config";
+import { sendVerificationCodeApi, verifyAndRegisterUser } from "../../services/usersService";
+//import CONFIG from "../../config";
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get("window");
@@ -49,6 +49,10 @@ export default function RegisterScreen({ navigation }) {
   // Animación de loading para el código
   const loadingRotation = useRef(new Animated.Value(0)).current;
   const loadingScale = useRef(new Animated.Value(1)).current;
+
+  const [expiresAt, setExpiresAt] = useState(null);
+  const [timeLeft, setTimeLeft] = useState("");
+
 
   useEffect(() => {
     // Secuencia de animaciones de entrada
@@ -117,7 +121,7 @@ export default function RegisterScreen({ navigation }) {
           useNativeDriver: true,
         })
       );
-      
+
       // Pulso de escala
       const scaleAnimation = Animated.loop(
         Animated.sequence([
@@ -147,6 +151,27 @@ export default function RegisterScreen({ navigation }) {
     }
   }, [sendingCode]);
 
+  useEffect(() => {
+    if (!expiresAt) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        setTimeLeft("Código expirado");
+        clearInterval(interval);
+      } else {
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeLeft(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+
   const floatTranslateY = floatAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -8],
@@ -173,58 +198,58 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const sendVerificationCode = async () => {
-    if (sendingCode) return; // Evita múltiples envíos
+    if (sendingCode) {
+      console.log("Ya se está enviando un código, evita envíos múltiples");
+      return; // Evita múltiples envíos
+    }
 
     setError("");
+    console.log("Validando datos...");
+
     if (!nombre.trim()) {
       setError("El nombre es obligatorio.");
+      console.log("Error: nombre vacío");
       return;
     }
     if (!email.trim() || !validateEmail(email)) {
       setError("Ingresa un email válido.");
+      console.log("Error: email inválido -", email);
       return;
     }
     if (!telefono.trim() || !validatePhone(telefono)) {
       setError(
         "Ingresa un número de teléfono válido (solo números, mínimo 8 dígitos)."
       );
+      console.log("Error: teléfono inválido -", telefono);
       return;
     }
     if (!password) {
       setError("La contraseña es obligatoria.");
+      console.log("Error: contraseña vacía");
       return;
     }
     if (!validatePassword(password)) {
       setError(
         "La contraseña debe tener al menos 8 caracteres, un número y un carácter especial."
       );
+      console.log("Error: contraseña no cumple con requisitos");
       return;
     }
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
+      console.log("Error: contraseñas no coinciden");
       return;
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("Código generado:", code);
     setSentCode(code);
+    setExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutos
     setSendingCode(true);
 
     try {
-      const response = await fetch(`${CONFIG.API_BASE_URL}/send-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: email,
-          code: code,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.text();
-        setError("No se pudo enviar el código de verificación: " + data);
-        setSendingCode(false);
-        return;
-      }
+      console.log("Enviando código al backend...");
+      await sendVerificationCodeApi({ email, code });
 
       // Animación de transición entre pasos
       Animated.sequence([
@@ -242,35 +267,55 @@ export default function RegisterScreen({ navigation }) {
 
       setSendingCode(false);
       setStep(2);
+      console.log("Código enviado con éxito, pasando al paso 2");
     } catch (e) {
-      setError("No se pudo enviar el código de verificación: " + e.message);
+      // Aquí chequeamos si el error es por correo ya registrado (status 409)
+      if (e.message.includes("409")) {
+        setError("El correo ya está registrado.");
+      } else {
+        setError("No se pudo enviar el código de verificación: " + e.message);
+      }
+      console.log("Excepción al enviar código:", e);
       setSendingCode(false);
     }
   };
 
+
   const handleVerifyAndRegister = async () => {
     setError("");
-    if (verificationCode !== sentCode) {
-      setError("El código ingresado es incorrecto.");
+
+    if (verificationCode.length !== 6) {
+      setError("Debes ingresar un código de 6 dígitos.");
       return;
     }
+
     setLoading(true);
-    const result = await registerUser({ nombre, email, telefono, password });
-    setLoading(false);
 
-    const telefono = telefono.startsWith("+") ? telefono : `+52${telefono}`;
-
-    if (result.success) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "¡Registro exitoso!",
-          body: "Tu cuenta ha sido creada correctamente.",
-        },
-        trigger: null,
+    try {
+      const result = await verifyAndRegisterUser({
+        nombre,
+        email,
+        telefono,
+        password,
+        code: verificationCode,
       });
-      navigation.navigate("Login");
-    } else {
-      setError(result.error || "Error al registrar usuario.");
+
+      if (result.success) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "¡Registro exitoso!",
+            body: "Tu cuenta ha sido creada correctamente.",
+          },
+          trigger: null,
+        });
+        navigation.navigate("Login");
+      } else {
+        setError(result.error || "Error al registrar usuario.");
+      }
+    } catch (error) {
+      setError("Error al conectar con el servidor.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -280,7 +325,7 @@ export default function RegisterScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar backgroundColor="#E0F2FE" barStyle="dark-content" />
-      
+
       {/* Fondo con gradiente */}
       <LinearGradient
         colors={['#E0F2FE', '#BAE6FD', '#7DD3FC']}
@@ -498,7 +543,7 @@ export default function RegisterScreen({ navigation }) {
                   <Text style={styles.registerText}>
                     ¿Ya tienes cuenta?{" "}
                   </Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => navigation.navigate("Login")}
                     activeOpacity={0.7}
                   >
@@ -509,6 +554,9 @@ export default function RegisterScreen({ navigation }) {
             ) : (
               <>
                 <View style={styles.verificationContainer}>
+                  <Text style={{ color: "#0369A1", marginTop: 10 }}>
+                    Tiempo restante: {timeLeft}
+                  </Text>
                   <Text style={styles.verificationText}>
                     Ingresa el código de 6 dígitos enviado a:
                   </Text>
@@ -560,7 +608,7 @@ export default function RegisterScreen({ navigation }) {
           >
             <TouchableOpacity
               style={[
-                styles.loginButton, 
+                styles.loginButton,
                 (loading || sendingCode) && { opacity: 0.6 }
               ]}
               onPress={step === 1 ? sendVerificationCode : handleVerifyAndRegister}
@@ -593,10 +641,10 @@ export default function RegisterScreen({ navigation }) {
                     {sendingCode
                       ? "Enviando código..."
                       : loading
-                      ? "Registrando..."
-                      : step === 1
-                      ? "Enviar código de verificación"
-                      : "Verificar y registrar"}
+                        ? "Registrando..."
+                        : step === 1
+                          ? "Enviar código de verificación"
+                          : "Verificar y registrar"}
                   </Text>
                 </View>
               </LinearGradient>

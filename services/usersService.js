@@ -1,13 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'https://apicallrest.onrender.com/api';
+//const API_URL = 'https://apicallrest.onrender.com/api';
+const API_URL = 'http://192.168.1.73:3004/api';
 
-export async function registerUser({ nombre, email, password }) {
+export async function verifyAndRegisterUser({ nombre, email, telefono, password, code }) {
   try {
-    const res = await fetch(`${API_URL}/register`, {
+    const res = await fetch(`${API_URL}/verify-and-register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, email, password }),
+      body: JSON.stringify({ nombre, email, telefono, password, code }),
     });
 
     const data = await res.json();
@@ -16,7 +17,7 @@ export async function registerUser({ nombre, email, password }) {
       throw new Error(data.error || 'Error al registrar usuario');
     }
 
-    return { success: true };
+    return { success: true, id: data.id };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -46,8 +47,20 @@ export async function loginUser({ email, password }) {
   }
 }
 
-
 export async function logoutUser() {
   await AsyncStorage.removeItem('token');
   await AsyncStorage.removeItem('user');
+}
+
+export async function sendVerificationCodeApi({ email, code }) {
+  const res = await fetch(`${API_URL}/send-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to: email, code }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Error al enviar código');
+  }
 }

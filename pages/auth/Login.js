@@ -17,6 +17,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../../styles/LoginStyles";
 import { AuthContext } from "../../context/AuthContext";  // <-- Importa el contexto
 import { loginUser } from "../../services/usersService";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePassword = (password) =>
@@ -118,11 +120,18 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (result.success) {
-      // 🔍 Aquí mostramos los datos antes de guardarlos
       console.log("✅ Token recibido:", result.token);
       console.log("✅ Usuario recibido:", result.userData);
 
-      // Guardamos en el contexto
+      // Guardar userData en AsyncStorage para poder accederlo en otras pantallas
+      try {
+        await AsyncStorage.setItem("userData", JSON.stringify(result.userData));
+        console.log("✅ userData guardado en AsyncStorage");
+      } catch (e) {
+        console.log("❌ Error guardando userData en AsyncStorage:", e);
+      }
+
+      // Guardamos en el contexto (si tienes esa función)
       await login(result.token, result.userData);
 
       await Notifications.scheduleNotificationAsync({

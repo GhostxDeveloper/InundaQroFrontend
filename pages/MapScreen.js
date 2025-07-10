@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-native";
 import * as Location from "expo-location";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { styles } from "../styles/Mapstyles";
 import {
   getAllFloodReports,
@@ -56,14 +56,24 @@ const MapScreen = ({ navigation }) => {
     longitudeDelta: 0.0421,
   };
 
-  // Teléfono del usuario (puedes cambiarlo o hacerlo dinámico)
-  //const [userPhone, setUserPhone] = useState("");
-  const userPhone = "+524427167903"
+  // Estado para el teléfono del usuario
+  const [userPhone, setUserPhone] = useState("");
+
   useEffect(() => {
     const fetchUserPhone = async () => {
       const userData = await AsyncStorage.getItem("userData");
       if (userData) {
-        setUserPhone(JSON.parse(userData).telefono);
+        let telefono = JSON.parse(userData).telefono;
+
+        // Agregar prefijo +52 si no existe
+        if (!telefono.startsWith("+52")) {
+          telefono = "+52" + telefono;
+        }
+
+        console.log("Teléfono del usuario cargado:", telefono);
+        setUserPhone(telefono);
+      } else {
+        console.log("No se encontró userData en AsyncStorage");
       }
     };
     fetchUserPhone();
@@ -173,14 +183,12 @@ const MapScreen = ({ navigation }) => {
     );
   };
 
-  // Función para mostrar preview de ubicación
   const showLocationPreviewModal = (location) => {
     setPreviewLocation(location);
     setShowLocationPreview(true);
     setSearchText(location.name);
     setShowSearchModal(false);
 
-    // Centrar el mapa en la ubicación seleccionada
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
@@ -194,25 +202,21 @@ const MapScreen = ({ navigation }) => {
     }
   };
 
-  // Función para iniciar navegación guiada directamente
   const startNavigation = (destinationCoord, destinationName) => {
     if (!location) {
       Alert.alert("Error", "No se pudo obtener tu ubicación actual");
       return;
     }
 
-    // Configurar datos para navegación guiada
     setGuidedDestination(destinationCoord);
     setGuidedDestinationName(destinationName);
     setShowGuidedNavigation(true);
 
-    // Limpiar estados del preview
     setShowLocationPreview(false);
     setPreviewLocation(null);
     setSearchText("");
   };
 
-  // Función para completar navegación guiada
   const handleGuidedNavigationComplete = () => {
     setShowGuidedNavigation(false);
     setGuidedDestination(null);
@@ -225,7 +229,6 @@ const MapScreen = ({ navigation }) => {
     ]);
   };
 
-  // Función para cancelar navegación guiada
   const handleGuidedNavigationCancel = () => {
     Alert.alert(
       "Cancelar navegación",
@@ -270,8 +273,11 @@ const MapScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4285F4" barStyle="light-content" />
 
-      {/* Componente de llamadas */}
-      <CallsComponent location={location} floodReports={floodReports} userPhone={userPhone} />
+      <CallsComponent
+        location={location}
+        floodReports={floodReports}
+        userPhone={userPhone}
+      />
 
       {showGuidedNavigation ? (
         <Modal
@@ -293,7 +299,6 @@ const MapScreen = ({ navigation }) => {
         </Modal>
       ) : (
         <>
-          {/* Interfaz normal del mapa */}
           <MapHeader
             navigation={navigation}
             searchText={searchText}
