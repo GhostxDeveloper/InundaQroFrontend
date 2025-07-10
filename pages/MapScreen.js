@@ -9,6 +9,7 @@ import {
   Modal,
 } from "react-native";
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { styles } from "../styles/Mapstyles";
 import {
   getAllFloodReports,
@@ -54,6 +55,19 @@ const MapScreen = ({ navigation }) => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   };
+
+  // Teléfono del usuario (puedes cambiarlo o hacerlo dinámico)
+  const [userPhone, setUserPhone] = useState("");
+
+  useEffect(() => {
+    const fetchUserPhone = async () => {
+      const userData = await AsyncStorage.getItem("userData");
+      if (userData) {
+        setUserPhone(JSON.parse(userData).telefono);
+      }
+    };
+    fetchUserPhone();
+  }, []);
 
   useEffect(() => {
     getCurrentLocation();
@@ -242,9 +256,6 @@ const MapScreen = ({ navigation }) => {
       );
     }
   };
-
-  // Teléfono del usuario (puedes cambiarlo o hacerlo dinámico)
-  const userPhone = "+524427167903";
 
   if (loading) {
     return (

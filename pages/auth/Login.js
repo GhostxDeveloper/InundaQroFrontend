@@ -1,44 +1,38 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
-  Dimensions,
-  StatusBar,
   Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { loginUser } from "../../services/usersService";
 import * as Notifications from "expo-notifications";
-import { LinearGradient } from 'expo-linear-gradient';
-import { styles } from '../../styles/LoginStyles'; // Importar los estilos
+import { LinearGradient } from "expo-linear-gradient";
+import { styles } from "../../styles/LoginStyles";
+import { AuthContext } from "../../context/AuthContext";  // <-- Importa el contexto
+import { loginUser } from "../../services/usersService";
 
-const { width, height } = Dimensions.get("window");
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validatePassword = (password) =>
+  /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(password);
 
-const validateEmail = (email) => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-};
+export default function LoginScreen() {
+  const navigation = useNavigation();
+  const { login } = useContext(AuthContext);  // <-- Extraemos la función login
 
-const validatePassword = (password) => {
-  const re = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-  return re.test(password);
-};
-
-export default function LoginScreen({ navigation }) {
   const [secure, setSecure] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Animaciones
+  // Animaciones (igual que antes)
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -47,7 +41,6 @@ export default function LoginScreen({ navigation }) {
   const buttonAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Secuencia de animaciones
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -79,7 +72,6 @@ export default function LoginScreen({ navigation }) {
       }),
     ]).start();
 
-    // Animación de flotación continua
     const floatAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim, {
@@ -124,6 +116,9 @@ export default function LoginScreen({ navigation }) {
     setLoading(false);
 
     if (result.success) {
+      // Guardamos en el contexto para mantener sesión
+      await login(result.token, result.userData);  // <---- aquí
+
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Inicio de sesión exitoso",
@@ -145,21 +140,19 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar backgroundColor="#E0F2FE" barStyle="dark-content" />
-      
-      {/* Fondo con gradiente */}
+
       <LinearGradient
-        colors={['#E0F2FE', '#BAE6FD', '#7DD3FC']}
+        colors={["#E0F2FE", "#BAE6FD", "#7DD3FC"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       />
 
-      {/* Elementos decorativos de fondo */}
       <Animated.View
         style={[
           styles.backgroundCircle,
@@ -182,7 +175,6 @@ export default function LoginScreen({ navigation }) {
         ]}
       />
 
-      {/* Gotas decorativas */}
       <Animated.View
         style={[
           styles.drop,
@@ -198,7 +190,6 @@ export default function LoginScreen({ navigation }) {
         ]}
       />
 
-      {/* Ondas decorativas */}
       <Animated.View
         style={[
           styles.wave,
@@ -207,21 +198,17 @@ export default function LoginScreen({ navigation }) {
         ]}
       />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
         <Animated.View
           style={[
             styles.logoContainer,
             {
               opacity: fadeAnim,
-              transform: [
-                { scale: scaleAnim },
-                { translateY: floatTranslateY }
-              ]
-            }
+              transform: [{ scale: scaleAnim }, { translateY: floatTranslateY }],
+            },
           ]}
         >
           <View style={styles.logoShadow}>
@@ -233,26 +220,24 @@ export default function LoginScreen({ navigation }) {
           </View>
         </Animated.View>
 
-        {/* Contenedor principal */}
         <Animated.View
           style={[
             styles.innerContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
-          
-          {/* Inputs con animación */}
+
           <Animated.View
             style={[
               styles.inputsContainer,
               {
                 opacity: inputAnim,
-                transform: [{ translateY: slideAnim }]
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
             <View style={styles.inputContainer}>
@@ -286,9 +271,7 @@ export default function LoginScreen({ navigation }) {
                   style={styles.eyeButton}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.eyeIcon}>
-                    {secure ? "🙈" : "🐵"}
-                  </Text>
+                  <Text style={styles.eyeIcon}>{secure ? "🙈" : "🐵"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -298,16 +281,12 @@ export default function LoginScreen({ navigation }) {
               onPress={() => navigation.navigate("ForgotPassword")}
               activeOpacity={0.7}
             >
-              <Text style={styles.forgotPasswordText}>
-                ¿Olvidaste tu contraseña?
-              </Text>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>
-                ¿No tienes cuenta?{" "}
-              </Text>
-              <TouchableOpacity 
+              <Text style={styles.registerText}>¿No tienes cuenta? </Text>
+              <TouchableOpacity
                 onPress={() => navigation.navigate("Register")}
                 activeOpacity={0.7}
               >
@@ -322,14 +301,13 @@ export default function LoginScreen({ navigation }) {
             ) : null}
           </Animated.View>
 
-          {/* Botón de login */}
           <Animated.View
             style={[
               styles.buttonContainer,
               {
                 opacity: buttonAnim,
-                transform: [{ translateY: slideAnim }]
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
             <TouchableOpacity
@@ -339,7 +317,7 @@ export default function LoginScreen({ navigation }) {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#0EA5E9', '#3B82F6']}
+                colors={["#0EA5E9", "#3B82F6"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}
