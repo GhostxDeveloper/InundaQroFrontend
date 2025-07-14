@@ -265,8 +265,6 @@ export const styles = StyleSheet.create({
         },
     },
 
-    // Estilos de búsqueda mejorados - Reemplaza la sección de búsqueda en tu PredictionStyles.js
-
     // Contenedor de búsqueda
     searchContainer: {
         backgroundColor: '#FFFFFF',

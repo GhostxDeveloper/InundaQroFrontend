@@ -651,7 +651,7 @@ const PrediccionesScreen = ({ navigation }) => {
                     coordinate={zone.coordinate}
                     title={zone.name}
                     description={`Riesgo ${zone.riskLevel} - ${zone.frequency} incidentes`}
-                    pinColor={zone.color}
+                    pinColor={getRiskColor(zone.riskLevel)}
                   />
                 </React.Fragment>
               ))}
