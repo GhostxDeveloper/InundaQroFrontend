@@ -12,6 +12,7 @@ import {
   Alert,
   TextInput,
   FlatList,
+  Switch,
 } from 'react-native';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import { WebView } from 'react-native-webview';
@@ -24,6 +25,11 @@ const PrediccionesScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState(null);
   const [predictionZones, setPredictionZones] = useState([]);
+
+  // Estados para actualización automática
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState(5000); // 5 segundos
+  const [lastUpdateTime, setLastUpdateTime] = useState(null);
 
   // Nuevo estado para la predicción personalizada
   const [customPrediction, setCustomPrediction] = useState(null);
@@ -39,6 +45,24 @@ const PrediccionesScreen = ({ navigation }) => {
 
   const mapRef = useRef(null);
   const searchMapRef = useRef(null);
+
+  // Función para obtener datos del servidor
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://192.168.1.72:3005/predicciones');
+      if (!response.ok) throw new Error('Error al obtener predicciones');
+      
+      const data = await response.json();
+      setPredictionZones(data.zonas || []);
+      setLastUpdateTime(new Date());
+    } catch (error) {
+      console.error('Error actualizando datos:', error);
+      // No mostramos alert durante actualización automática para no molestar al usuario
+      if (!autoRefresh) {
+        Alert.alert('Error', 'No se pudieron actualizar los datos');
+      }
+    }
+  };
 
   const formatSearchResults = (data) => {
     return data.map(item => ({
@@ -114,10 +138,7 @@ const PrediccionesScreen = ({ navigation }) => {
 </html>
 `;
 
-  useEffect(() => {
-    initializeData();
-  }, []);
-
+  // Inicialización de datos
   const initializeData = async () => {
     try {
       setLoading(true);
@@ -131,12 +152,8 @@ const PrediccionesScreen = ({ navigation }) => {
         setLocation(currentLocation);
       }
 
-      // Llamar a tu backend para obtener las zonas de predicción reales
-      const response = await fetch('http://192.168.1.73:3004/predicciones');
-      if (!response.ok) throw new Error('Error al obtener predicciones');
-
-      const data = await response.json();
-      setPredictionZones(data.zonas || []);
+      // Cargar datos iniciales
+      await fetchData();
       setLoading(false);
 
     } catch (error) {
@@ -144,6 +161,36 @@ const PrediccionesScreen = ({ navigation }) => {
       Alert.alert('Error', 'No se pudieron cargar los datos de predicción');
       setLoading(false);
     }
+  };
+
+  // useEffect para inicialización
+  useEffect(() => {
+    initializeData();
+  }, []);
+
+  // useEffect para manejo de actualización automática
+  useEffect(() => {
+    let intervalId;
+    
+    if (autoRefresh) {
+      intervalId = setInterval(fetchData, refreshInterval);
+      // Ejecutar inmediatamente la primera vez
+      fetchData();
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [autoRefresh, refreshInterval]);
+
+  // Función para formatear la hora de última actualización
+  const formatLastUpdateTime = () => {
+    if (!lastUpdateTime) return '';
+    return lastUpdateTime.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   };
 
   // Función para buscar lugares usando geocodificación
@@ -210,15 +257,8 @@ const PrediccionesScreen = ({ navigation }) => {
       // Obtener elevación
       const elevation = await getElevation(location.latitude, location.longitude);
 
-      // console.log("📤 Enviando a predicciones/personalizada:", {
-      //   name: location.name || 'Ubicación personalizada',
-      //   lat: location.latitude,
-      //   lng: location.longitude,
-      //   elevation: elevation,
-      // });
-
       // Enviar datos a la API
-      const response = await fetch('http://192.168.1.73:3004/predicciones/personalizadas', {
+      const response = await fetch('http://192.168.1.72:3005/predicciones/personalizadas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -360,6 +400,36 @@ const PrediccionesScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Predicciones de Inundación</Text>
           <View style={styles.placeholder} />
+        </View>
+
+        {/* Control de Actualización Automática */}
+        <View style={styles.autoRefreshContainer}>
+          <View style={styles.autoRefreshInfo}>
+            <Text style={styles.autoRefreshText}>
+              Actualización automática: {autoRefresh ? 'ACTIVA' : 'INACTIVA'}
+            </Text>
+            {lastUpdateTime && (
+              <Text style={styles.lastUpdateText}>
+                Última actualización: {formatLastUpdateTime()}
+              </Text>
+            )}
+          </View>
+          <Switch
+            value={autoRefresh}
+            onValueChange={(value) => {
+              setAutoRefresh(value);
+              if (value) {
+                // Mostrar mensaje informativo la primera vez
+                Alert.alert(
+                  'Actualización Automática Activada',
+                  'Los datos se actualizarán cada 5 segundos automáticamente.',
+                  [{ text: 'Entendido' }]
+                );
+              }
+            }}
+            trackColor={{ false: "#767577", true: "#2E86AB" }}
+            thumbColor={autoRefresh ? "#FFFFFF" : "#f4f3f4"}
+          />
         </View>
 
         {/* Gráfica */}
@@ -629,54 +699,59 @@ const PrediccionesScreen = ({ navigation }) => {
           </Text>
 
           <View style={styles.mapWrapper}>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={initialRegion}
-              showsUserLocation={true}
-              showsMyLocationButton={false}
-              mapType="standard"
-            >
-              {/* Marcadores de zonas de riesgo predefinidas */}
-              {predictionZones.map((zone, index) => (
-                <React.Fragment key={index}>
-                  <Circle
-                    center={zone.coordinate}
-                    radius={zone.radius}
-                    fillColor={`${zone.color}40`}
-                    strokeColor={zone.color}
-                    strokeWidth={2}
-                  />
-                  <Marker
-                    coordinate={zone.coordinate}
-                    title={zone.name}
-                    description={`Riesgo ${zone.riskLevel} - ${zone.frequency} incidentes`}
-                    pinColor={getRiskColor(zone.riskLevel)}
-                  />
-                </React.Fragment>
-              ))}
+            // En tu componente PrediccionesScreen, modifica la parte del MapView:
 
-              {/* Marcador y círculo de predicción personalizada */}
-              {customPrediction && (
-                <React.Fragment>
-                  <Circle
-                    center={customPrediction.coordinate}
-                    radius={customPrediction.radius}
-                    fillColor={`${customPrediction.color}60`}
-                    strokeColor={customPrediction.color}
-                    strokeWidth={3}
-                    //strokeColor="#2E86AB"
-                    strokePattern={[10, 10]} // Línea punteada para distinguir
-                  />
-                  <Marker
-                    coordinate={customPrediction.coordinate}
-                    title={`✨ ${customPrediction.name}`}
-                    description={`Predicción Personalizada - Riesgo ${customPrediction.riskLevel}`}
-                    pinColor="#2E86AB"
-                  />
-                </React.Fragment>
-              )}
-            </MapView>
+<MapView
+  ref={mapRef}
+  style={styles.map}
+  initialRegion={initialRegion}
+  showsUserLocation={true}
+  showsMyLocationButton={false}
+  mapType="standard"
+>
+{/* Marcadores de zonas de riesgo predefinidas */}
+{predictionZones.map((zone, index) => {
+  const pinColor = getRiskColor(zone.riskLevel);
+  return (
+    <React.Fragment key={`${index}-${zone.riskLevel}`}>
+      <Circle
+        center={zone.coordinate}
+        radius={zone.radius}
+        fillColor={`${pinColor}40`}
+        strokeColor={pinColor}
+        strokeWidth={2}
+      />
+      <Marker
+        coordinate={zone.coordinate}
+        title={String(zone.name)}
+        description={String(`Riesgo ${zone.riskLevel} - ${zone.frequency} incidentes`)}
+        pinColor={pinColor}
+      />
+    </React.Fragment>
+  );
+})}
+
+
+  {/* Marcador y círculo de predicción personalizada */}
+  {customPrediction && (
+    <React.Fragment key={`custom-${customPrediction.riskLevel}`}> {/* Añade riskLevel al key */}
+      <Circle
+        center={customPrediction.coordinate}
+        radius={customPrediction.radius}
+        fillColor={`${customPrediction.color}60`}
+        strokeColor={customPrediction.color}
+        strokeWidth={3}
+        strokePattern={[10, 10]}
+      />
+      <Marker
+        coordinate={customPrediction.coordinate}
+        title={`✨ ${customPrediction.name}`}
+        description={`Predicción Personalizada - Riesgo ${customPrediction.riskLevel}`}
+        pinColor={customPrediction.color}
+      />
+    </React.Fragment>
+  )}
+</MapView>
           </View>
 
           {/* Leyenda del mapa actualizada */}
@@ -718,6 +793,11 @@ const PrediccionesScreen = ({ navigation }) => {
           <Text style={styles.infoText}>
             Recomendamos especial precaución en estas áreas durante alertas meteorológicas.
           </Text>
+          {autoRefresh && (
+            <Text style={styles.infoText}>
+              ⚡ La actualización automática está activa. Los datos se refrescan cada 5 segundos.
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

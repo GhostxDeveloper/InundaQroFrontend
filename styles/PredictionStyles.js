@@ -1,9 +1,14 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+    // ===== CONTENEDORES PRINCIPALES =====
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
+    },
+
+    scrollContainer: {
+        flex: 1,
     },
 
     loadingContainer: {
@@ -20,11 +25,7 @@ export const styles = StyleSheet.create({
         fontWeight: '500',
     },
 
-    scrollContainer: {
-        flex: 1,
-    },
-
-    // Header Styles
+    // ===== HEADER =====
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -63,7 +64,47 @@ export const styles = StyleSheet.create({
         width: 32,
     },
 
-    // Chart Section
+    // ===== ACTUALIZACIÓN AUTOMÁTICA =====
+    autoRefreshContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 15,
+        backgroundColor: '#F8F9FA',
+        marginHorizontal: 16,
+        marginVertical: 10,
+        borderRadius: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: '#2E86AB',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+
+    autoRefreshInfo: {
+        flex: 1,
+        marginRight: 15,
+    },
+
+    autoRefreshText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 4,
+    },
+
+    lastUpdateText: {
+        fontSize: 12,
+        color: '#666',
+        fontStyle: 'italic',
+    },
+
+    // ===== SECCIÓN DE GRÁFICA =====
     chartContainer: {
         backgroundColor: '#FFFFFF',
         margin: 16,
@@ -97,175 +138,7 @@ export const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
 
-    // Risk Zones Section
-    riskContainer: {
-        backgroundColor: '#FFFFFF',
-        margin: 16,
-        marginTop: 0,
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    riskScrollView: {
-        marginTop: 8,
-    },
-
-    riskCard: {
-        backgroundColor: '#FAFAFA',
-        borderRadius: 8,
-        padding: 12,
-        marginRight: 12,
-        minWidth: 140,
-        borderLeftWidth: 4,
-    },
-
-    riskZoneName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333333',
-        marginBottom: 4,
-    },
-
-    riskLevel: {
-        fontSize: 12,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-
-    riskFrequency: {
-        fontSize: 11,
-        color: '#666666',
-    },
-
-    // Map Section
-    mapContainer: {
-        backgroundColor: '#FFFFFF',
-        margin: 16,
-        marginTop: 0,
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    mapSubtitle: {
-        fontSize: 14,
-        color: '#666666',
-        marginBottom: 12,
-        lineHeight: 20,
-    },
-
-    mapWrapper: {
-        borderRadius: 12,
-        overflow: 'hidden',
-        height: 350,
-        marginBottom: 16,
-    },
-
-    map: {
-        flex: 1,
-    },
-
-    // Legend
-    legend: {
-        backgroundColor: '#F8F9FA',
-        borderRadius: 8,
-        padding: 12,
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-    },
-
-    legendTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333333',
-        marginRight: 16,
-    },
-
-    legendItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 16,
-        marginVertical: 2,
-    },
-
-    legendColor: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        marginRight: 6,
-    },
-
-    legendText: {
-        fontSize: 12,
-        color: '#666666',
-    },
-
-    // Info Section
-    infoContainer: {
-        backgroundColor: '#FFFFFF',
-        margin: 16,
-        marginTop: 0,
-        marginBottom: 32,
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    infoTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333333',
-        marginBottom: 12,
-    },
-
-    infoText: {
-        fontSize: 14,
-        color: '#666666',
-        lineHeight: 22,
-        marginBottom: 8,
-        textAlign: 'justify',
-    },
-
-    // Responsive adjustments
-    '@media (max-width: 360px)': {
-        headerTitle: {
-            fontSize: 20,
-        },
-        sectionTitle: {
-            fontSize: 16,
-        },
-        chart: {
-            height: 250,
-        },
-        mapWrapper: {
-            height: 300,
-        },
-    },
-
-    // Contenedor de búsqueda
+    // ===== BÚSQUEDA PERSONALIZADA =====
     searchContainer: {
         backgroundColor: '#FFFFFF',
         marginHorizontal: 16,
@@ -287,7 +160,7 @@ export const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
-    // Campo de búsqueda mejorado
+    // Campo de búsqueda
     searchInputContainer: {
         position: 'relative',
         marginBottom: 16,
@@ -299,12 +172,11 @@ export const styles = StyleSheet.create({
         borderColor: '#E8F4FD',
         borderRadius: 12,
         paddingHorizontal: 16,
-        paddingRight: 50, // Espacio para el loader
+        paddingRight: 50,
         fontSize: 16,
         backgroundColor: '#FAFCFF',
         color: '#333333',
         fontWeight: '500',
-        // Sombra sutil interna
         shadowColor: '#2E86AB',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -312,7 +184,6 @@ export const styles = StyleSheet.create({
         elevation: 1,
     },
 
-    // Estilo cuando el input está enfocado
     searchInputFocused: {
         borderColor: '#2E86AB',
         backgroundColor: '#FFFFFF',
@@ -327,116 +198,25 @@ export const styles = StyleSheet.create({
         top: 13,
     },
 
-    // Contenedor de sugerencias mejorado
-    suggestionsContainer: {
-        maxHeight: 220,
-        marginBottom: 16,
+    clearSearchButton: {
+        position: 'absolute',
+        right: 16,
+        top: 13,
+        width: 24,
+        height: 24,
         borderRadius: 12,
-        backgroundColor: '#FFFFFF',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        overflow: 'hidden',
-    },
-
-    suggestionItem: {
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F5F7FA',
-        backgroundColor: '#FFFFFF',
-        flexDirection: 'row',
-        alignItems: 'center',
-        minHeight: 60,
-    },
-
-    // Efecto hover para sugerencias
-    suggestionItemPressed: {
-        backgroundColor: '#F8FCFF',
-    },
-
-    suggestionIcon: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#2E86AB',
-        marginRight: 12,
-    },
-
-    suggestionContent: {
-        flex: 1,
-    },
-
-    suggestionName: {
-        fontSize: 15,
-        color: '#333333',
-        fontWeight: '600',
-        marginBottom: 2,
-        lineHeight: 20,
-    },
-
-    suggestionAddress: {
-        fontSize: 13,
-        color: '#666666',
-        lineHeight: 18,
-    },
-
-    // Mapa de búsqueda mejorado
-    searchMapWrapper: {
-        height: 220,
-        borderRadius: 12,
-        overflow: 'hidden',
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#E8F4FD',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-
-    searchMap: {
-        flex: 1,
-    },
-
-    // Botón de confirmación mejorado
-    confirmButton: {
-        backgroundColor: '#2E86AB',
-        borderRadius: 12,
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        alignItems: 'center',
+        backgroundColor: '#E0E0E0',
         justifyContent: 'center',
-        minHeight: 52,
-        shadowColor: '#2E86AB',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 4,
+        alignItems: 'center',
     },
 
-    confirmButtonPressed: {
-        backgroundColor: '#1E5F7A',
-        transform: [{ scale: 0.98 }],
+    clearSearchIcon: {
+        fontSize: 12,
+        color: '#666666',
+        fontWeight: 'bold',
     },
 
-    confirmButtonDisabled: {
-        backgroundColor: '#B0C4DE',
-        shadowOpacity: 0.1,
-        elevation: 1,
-    },
-
-    confirmButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
-        textAlign: 'center',
-        letterSpacing: 0.5,
-    },
-
-    // Indicador de ubicación seleccionada
+    // Indicadores de ubicación
     selectedLocationIndicator: {
         backgroundColor: '#E8F4FD',
         borderRadius: 8,
@@ -459,119 +239,7 @@ export const styles = StyleSheet.create({
         lineHeight: 16,
     },
 
-    // Estados de carga
-    searchLoadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 12,
-    },
-
-    searchLoadingText: {
-        marginTop: 8,
-        fontSize: 14,
-        color: '#2E86AB',
-        fontWeight: '500',
-    },
-
-    // Mensaje cuando no hay resultados
-    noResultsContainer: {
-        padding: 24,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#F8F9FA',
-        borderRadius: 12,
-        marginBottom: 16,
-    },
-
-    noResultsIcon: {
-        fontSize: 32,
-        color: '#CCCCCC',
-        marginBottom: 8,
-    },
-
-    noResultsText: {
-        fontSize: 14,
-        color: '#666666',
-        textAlign: 'center',
-        lineHeight: 20,
-    },
-
-    // Botón para limpiar búsqueda
-    clearSearchButton: {
-        position: 'absolute',
-        right: 16,
-        top: 13,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#E0E0E0',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    clearSearchIcon: {
-        fontSize: 12,
-        color: '#666666',
-        fontWeight: 'bold',
-    },
-
-    // Animaciones y transiciones
-    fadeIn: {
-        opacity: 1,
-    },
-
-    fadeOut: {
-        opacity: 0,
-    },
-
-    // Responsive para pantallas pequeñas
-    '@media (max-width: 360px)': {
-        searchContainer: {
-            marginHorizontal: 12,
-            padding: 16,
-        },
-
-        searchInput: {
-            height: 46,
-            fontSize: 15,
-        },
-
-        searchMapWrapper: {
-            height: 180,
-        },
-
-        confirmButton: {
-            paddingVertical: 14,
-            minHeight: 48,
-        },
-
-        confirmButtonText: {
-            fontSize: 15,
-        },
-
-        suggestionItem: {
-            padding: 14,
-            minHeight: 56,
-        },
-
-        suggestionName: {
-            fontSize: 14,
-        },
-
-        suggestionAddress: {
-            fontSize: 12,
-        },
-    },
-});
-
-const additionalStyles = {
-    // Indicador de predicción personalizada activa
+    // Predicción personalizada activa
     customPredictionIndicator: {
         backgroundColor: '#E3F2FD',
         borderRadius: 12,
@@ -641,7 +309,186 @@ const additionalStyles = {
         fontStyle: 'italic',
     },
 
-    // Tarjeta de riesgo personalizada
+    // Sugerencias de búsqueda
+    suggestionsContainer: {
+        maxHeight: 220,
+        marginBottom: 16,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        overflow: 'hidden',
+    },
+
+    suggestionItem: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F5F7FA',
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: 60,
+    },
+
+    suggestionItemPressed: {
+        backgroundColor: '#F8FCFF',
+    },
+
+    suggestionIcon: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#2E86AB',
+        marginRight: 12,
+    },
+
+    suggestionContent: {
+        flex: 1,
+    },
+
+    suggestionName: {
+        fontSize: 15,
+        color: '#333333',
+        fontWeight: '600',
+        marginBottom: 2,
+        lineHeight: 20,
+    },
+
+    suggestionAddress: {
+        fontSize: 13,
+        color: '#666666',
+        lineHeight: 18,
+    },
+
+    // Sin resultados
+    noResultsContainer: {
+        padding: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        marginBottom: 16,
+    },
+
+    noResultsIcon: {
+        fontSize: 32,
+        color: '#CCCCCC',
+        marginBottom: 8,
+    },
+
+    noResultsText: {
+        fontSize: 14,
+        color: '#666666',
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+
+    // Mapa de búsqueda
+    searchMapWrapper: {
+        height: 220,
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E8F4FD',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+
+    searchMap: {
+        flex: 1,
+    },
+
+    searchLoadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+    },
+
+    searchLoadingText: {
+        marginTop: 8,
+        fontSize: 14,
+        color: '#2E86AB',
+        fontWeight: '500',
+    },
+
+    // Botón de confirmación
+    confirmButton: {
+        backgroundColor: '#2E86AB',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 52,
+        shadowColor: '#2E86AB',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+
+    confirmButtonPressed: {
+        backgroundColor: '#1E5F7A',
+        transform: [{ scale: 0.98 }],
+    },
+
+    confirmButtonDisabled: {
+        backgroundColor: '#B0C4DE',
+        shadowOpacity: 0.1,
+        elevation: 1,
+    },
+
+    confirmButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '700',
+        textAlign: 'center',
+        letterSpacing: 0.5,
+    },
+
+    // ===== ZONAS DE RIESGO =====
+    riskContainer: {
+        backgroundColor: '#FFFFFF',
+        margin: 16,
+        marginTop: 0,
+        borderRadius: 12,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    riskScrollView: {
+        marginTop: 8,
+    },
+
+    riskCard: {
+        backgroundColor: '#FAFAFA',
+        borderRadius: 8,
+        padding: 12,
+        marginRight: 12,
+        minWidth: 140,
+        borderLeftWidth: 4,
+    },
+
     customRiskCard: {
         backgroundColor: '#F8F9FA',
         borderWidth: 2,
@@ -661,6 +508,170 @@ const additionalStyles = {
         marginBottom: 4,
         textAlign: 'center',
     },
-};
-export const combinedStyles = { ...styles, ...additionalStyles };
 
+    riskZoneName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333333',
+        marginBottom: 4,
+    },
+
+    riskLevel: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+
+    riskFrequency: {
+        fontSize: 11,
+        color: '#666666',
+    },
+
+    // ===== MAPA PRINCIPAL =====
+    mapContainer: {
+        backgroundColor: '#FFFFFF',
+        margin: 16,
+        marginTop: 0,
+        borderRadius: 12,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    mapSubtitle: {
+        fontSize: 14,
+        color: '#666666',
+        marginBottom: 12,
+        lineHeight: 20,
+    },
+
+    mapWrapper: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        height: 350,
+        marginBottom: 16,
+    },
+
+    map: {
+        flex: 1,
+    },
+
+    // Leyenda
+    legend: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 8,
+        padding: 12,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+    },
+
+    legendTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333333',
+        marginRight: 16,
+    },
+
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 16,
+        marginVertical: 2,
+    },
+
+    legendColor: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginRight: 6,
+    },
+
+    legendText: {
+        fontSize: 12,
+        color: '#666666',
+    },
+
+    // ===== INFORMACIÓN =====
+    infoContainer: {
+        backgroundColor: '#FFFFFF',
+        margin: 16,
+        marginTop: 0,
+        marginBottom: 32,
+        borderRadius: 12,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+
+    infoTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333333',
+        marginBottom: 12,
+    },
+
+    infoText: {
+        fontSize: 14,
+        color: '#666666',
+        lineHeight: 22,
+        marginBottom: 8,
+        textAlign: 'justify',
+    },
+
+    // ===== RESPONSIVE =====
+    '@media (max-width: 360px)': {
+        headerTitle: {
+            fontSize: 20,
+        },
+        sectionTitle: {
+            fontSize: 16,
+        },
+        chart: {
+            height: 250,
+        },
+        mapWrapper: {
+            height: 300,
+        },
+        searchContainer: {
+            marginHorizontal: 12,
+            padding: 16,
+        },
+        searchInput: {
+            height: 46,
+            fontSize: 15,
+        },
+        searchMapWrapper: {
+            height: 180,
+        },
+        confirmButton: {
+            paddingVertical: 14,
+            minHeight: 48,
+        },
+        confirmButtonText: {
+            fontSize: 15,
+        },
+        suggestionItem: {
+            padding: 14,
+            minHeight: 56,
+        },
+        suggestionName: {
+            fontSize: 14,
+        },
+        suggestionAddress: {
+            fontSize: 12,
+        },
+    },
+});
