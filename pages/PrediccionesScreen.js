@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -259,13 +258,17 @@ const PrediccionesScreen = ({ navigation }) => {
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <View style={styles.backIconContainer}>
+              <Text style={styles.backIcon}>←</Text>
+            </View>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Predicciones de Inundación</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerTitle}>Predicciones de Inundación</Text>
+          </View>
           <View style={styles.placeholder} />
         </View>
 

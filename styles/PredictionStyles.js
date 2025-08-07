@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
         flex: 1,
     },
 
-    // Header Styles
+    // Header Styles - MEJORADOS
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -37,13 +37,45 @@ export const styles = StyleSheet.create({
         paddingTop: 40,
     },
 
-    headerTitle: {
+    backButton: {
+        padding: 8,
+    },
+
+    backIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+
+    backIcon: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+
+    titleContainer: {
         flex: 1,
-        textAlign: 'center',
+        alignItems: 'center',
+    },
+
+    headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#FFFFFF',
-        marginBottom: 0,
+        letterSpacing: 0.5,
+        textShadowColor: 'rgba(0, 0, 0, 0.1)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
 
     headerSubtitle: {
@@ -52,17 +84,8 @@ export const styles = StyleSheet.create({
         opacity: 0.9,
     },
 
-    backButton: {
-        padding: 8,
-    },
-
-    backIcon: {
-        fontSize: 24,
-        color: '#FFFFFF',
-    },
-
     placeholder: {
-        width: 32, // Ajusta este valor si tu backButton es más ancho
+        width: 32,
     },
 
     // Chart Section
