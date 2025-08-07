@@ -1,5 +1,4 @@
 import React, { useContext } from "react";
-import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 import HomeScreen from "../pages/Home";
@@ -21,15 +20,12 @@ export default function Routes() {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
-    // Mientras carga el estado de sesión, mostramos splash
     return <SplashScreen />;
   }
 
   return (
-
     <Stack.Navigator>
       {user ? (
-        // Rutas privadas: usuario autenticado
         <>
           <Stack.Screen
             name="Home"
@@ -53,7 +49,6 @@ export default function Routes() {
           />
         </>
       ) : (
-        // Rutas públicas: login, registro, bienvenida, etc.
         <>
           <Stack.Screen
             name="Welcome"
@@ -78,6 +73,5 @@ export default function Routes() {
         </>
       )}
     </Stack.Navigator>
-
   );
 }

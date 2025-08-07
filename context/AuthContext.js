@@ -5,24 +5,36 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);       // datos usuario
-    const [token, setToken] = useState(null);     // token JWT
-    const [loading, setLoading] = useState(true); // para saber si carga la sesión
+    const [user, setUser] = useState(null);       
+    const [token, setToken] = useState(null);     
+    const [loading, setLoading] = useState(true); 
 
     useEffect(() => {
-        const resetSession = async () => {
+        const checkExistingSession = async () => {
             try {
-                // 🔁 Borra cualquier sesión previa al iniciar
-                await AsyncStorage.removeItem("token");
-                await AsyncStorage.removeItem("user");
-               // console.log("✅ Sesión eliminada al iniciar la app");
+                // 🔍 Verificar si hay una sesión guardada
+                const savedToken = await AsyncStorage.getItem("token");
+                const savedUser = await AsyncStorage.getItem("user");
+
+                if (savedToken && savedUser) {
+                    // ✅ Restaurar sesión existente
+                    setToken(savedToken);
+                    setUser(JSON.parse(savedUser));
+                    console.log("✅ Sesión restaurada");
+                } else {
+                    console.log("ℹ️ No hay sesión guardada");
+                }
             } catch (error) {
-                console.log("Error borrando sesión:", error);
+                console.log("❌ Error verificando sesión:", error);
             } finally {
-                setLoading(false);
+                // 🕐 Simular un tiempo mínimo de splash (opcional)
+                setTimeout(() => {
+                    setLoading(false);
+                }, 2000); // 2 segundos de splash mínimo
             }
         };
-        resetSession();
+
+        checkExistingSession();
     }, []);
 
     const login = async (token, userData) => {
