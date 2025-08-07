@@ -49,7 +49,7 @@ const PrediccionesScreen = ({ navigation }) => {
   // Función para obtener datos del servidor
   const fetchData = async () => {
     try {
-      const response = await fetch('http://192.168.1.72:3005/predicciones');
+      const response = await fetch('https://apicallrest-1.onrender.com/predicciones');
       if (!response.ok) throw new Error('Error al obtener predicciones');
       
       const data = await response.json();
@@ -258,7 +258,7 @@ const PrediccionesScreen = ({ navigation }) => {
       const elevation = await getElevation(location.latitude, location.longitude);
 
       // Enviar datos a la API
-      const response = await fetch('http://192.168.1.72:3005/predicciones/personalizadas', {
+      const response = await fetch('https://apicallrest-1.onrender.com/predicciones/personalizadas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
