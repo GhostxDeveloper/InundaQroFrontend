@@ -216,6 +216,7 @@ const PrediccionesScreen = ({ navigation }) => {
       const formattedResults = data.map(item => ({
         id: item.place_id,
         name: item.display_name,
+        fullAddress: item.display_name,
         latitude: parseFloat(item.lat),
         longitude: parseFloat(item.lon),
         address: item.address || {},
@@ -300,7 +301,7 @@ const PrediccionesScreen = ({ navigation }) => {
 
       Alert.alert(
         'Predicción Completada',
-        `📍 ${result.name}\n🔍 Riesgo: ${result.riskLevel}\n📊 Frecuencia estimada: ${result.frequency} incidentes\n\n✅ La predicción se ha agregado al mapa principal`,
+        `📍 ${result.name}\n🔍 Riesgo: ${result.riskLevel}\n📊 Probabilidad: ${result.frequency}\n\n✅ La predicción se ha agregado al mapa principal`,
         [
           {
             text: 'Ver en Mapa',
@@ -326,6 +327,7 @@ const PrediccionesScreen = ({ navigation }) => {
     setSelectedLocation(place);
     setSearchText(place.name);
     setShowSuggestions(false);
+    setSearchInputFocused(false); // Añadir esto para quitar el foco
 
     // Animar el mapa de búsqueda al lugar seleccionado
     if (searchMapRef.current) {
@@ -477,9 +479,16 @@ const PrediccionesScreen = ({ navigation }) => {
                 }
               }}
               onBlur={() => {
-                setSearchInputFocused(false);
-                setTimeout(() => setShowSuggestions(false), 200);
+                // Aumentar el delay para dar tiempo al onPress de las sugerencias
+                setTimeout(() => {
+                  if (!searchInputFocused) return; // Evitar conflictos
+                  setSearchInputFocused(false);
+                  if (!selectedLocation) {
+                    setShowSuggestions(false);
+                  }
+                }, 500); // Aumentado de 200 a 500ms
               }}
+              blurOnSubmit={false} // Evitar que se pierda el foco automáticamente
             />
 
             {searchLoading && (
@@ -498,6 +507,7 @@ const PrediccionesScreen = ({ navigation }) => {
                   setSearchResults([]);
                   setShowSuggestions(false);
                   setSelectedLocation(null);
+                  setSearchInputFocused(false);
                 }}
               >
                 <Text style={styles.clearSearchIcon}>×</Text>
@@ -542,7 +552,7 @@ const PrediccionesScreen = ({ navigation }) => {
                   🔍 Riesgo: {customPrediction.riskLevel}
                 </Text>
                 <Text style={styles.customPredictionFrequency}>
-                  📊 {customPrediction.frequency} incidentes estimados
+                  📊 Probabilidad: {customPrediction.frequency}
                 </Text>
                 <Text style={styles.customPredictionNote}>
                   * Visible en el mapa principal
@@ -557,6 +567,7 @@ const PrediccionesScreen = ({ navigation }) => {
               <ScrollView
                 nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="always" // Crítico: permite tocar las sugerencias
               >
                 {searchResults.map((item) => (
                   <TouchableOpacity
@@ -564,6 +575,9 @@ const PrediccionesScreen = ({ navigation }) => {
                     style={styles.suggestionItem}
                     onPress={() => handlePlaceSelect(item)}
                     activeOpacity={0.7}
+                    // Añadir estas props para mejorar la responsividad
+                    delayPressIn={0}
+                    delayPressOut={0}
                   >
                     <View style={styles.suggestionIcon} />
                     <View style={styles.suggestionContent}>
@@ -664,7 +678,7 @@ const PrediccionesScreen = ({ navigation }) => {
                   Riesgo {zone.riskLevel}
                 </Text>
                 <Text style={styles.riskFrequency}>
-                  {zone.frequency} incidentes estimados
+                  Probabilidad: {zone.frequency}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -687,7 +701,7 @@ const PrediccionesScreen = ({ navigation }) => {
                   Riesgo {customPrediction.riskLevel}
                 </Text>
                 <Text style={styles.riskFrequency}>
-                  {customPrediction.frequency} incidentes estimados
+                  Probabilidad: {customPrediction.frequency}
                 </Text>
               </TouchableOpacity>
             )}
@@ -703,59 +717,56 @@ const PrediccionesScreen = ({ navigation }) => {
           </Text>
 
           <View style={styles.mapWrapper}>
-            // En tu componente PrediccionesScreen, modifica la parte del MapView:
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              initialRegion={initialRegion}
+              showsUserLocation={true}
+              showsMyLocationButton={false}
+              mapType="standard"
+            >
+              {/* Marcadores de zonas de riesgo predefinidas */}
+              {predictionZones.map((zone, index) => {
+                const pinColor = getRiskColor(zone.riskLevel);
+                return (
+                  <React.Fragment key={`${index}-${zone.riskLevel}`}>
+                    <Circle
+                      center={zone.coordinate}
+                      radius={zone.radius}
+                      fillColor={`${pinColor}40`}
+                      strokeColor={pinColor}
+                      strokeWidth={2}
+                    />
+                    <Marker
+                      coordinate={zone.coordinate}
+                      title={String(zone.name)}
+                      description={String(`Riesgo ${zone.riskLevel} - Probabilidad: ${zone.frequency}`)}
+                      pinColor={pinColor}
+                    />
+                  </React.Fragment>
+                );
+              })}
 
-<MapView
-  ref={mapRef}
-  style={styles.map}
-  initialRegion={initialRegion}
-  showsUserLocation={true}
-  showsMyLocationButton={false}
-  mapType="standard"
->
-{/* Marcadores de zonas de riesgo predefinidas */}
-{predictionZones.map((zone, index) => {
-  const pinColor = getRiskColor(zone.riskLevel);
-  return (
-    <React.Fragment key={`${index}-${zone.riskLevel}`}>
-      <Circle
-        center={zone.coordinate}
-        radius={zone.radius}
-        fillColor={`${pinColor}40`}
-        strokeColor={pinColor}
-        strokeWidth={2}
-      />
-      <Marker
-        coordinate={zone.coordinate}
-        title={String(zone.name)}
-        description={String(`Riesgo ${zone.riskLevel} - ${zone.frequency} incidentes`)}
-        pinColor={pinColor}
-      />
-    </React.Fragment>
-  );
-})}
-
-
-  {/* Marcador y círculo de predicción personalizada */}
-  {customPrediction && (
-    <React.Fragment key={`custom-${customPrediction.riskLevel}`}> {/* Añade riskLevel al key */}
-      <Circle
-        center={customPrediction.coordinate}
-        radius={customPrediction.radius}
-        fillColor={`${customPrediction.color}60`}
-        strokeColor={customPrediction.color}
-        strokeWidth={3}
-        strokePattern={[10, 10]}
-      />
-      <Marker
-        coordinate={customPrediction.coordinate}
-        title={`✨ ${customPrediction.name}`}
-        description={`Predicción Personalizada - Riesgo ${customPrediction.riskLevel}`}
-        pinColor={customPrediction.color}
-      />
-    </React.Fragment>
-  )}
-</MapView>
+              {/* Marcador y círculo de predicción personalizada */}
+              {customPrediction && (
+                <React.Fragment key={`custom-${customPrediction.riskLevel}`}>
+                  <Circle
+                    center={customPrediction.coordinate}
+                    radius={customPrediction.radius}
+                    fillColor={`${customPrediction.color}60`}
+                    strokeColor={customPrediction.color}
+                    strokeWidth={3}
+                    strokePattern={[10, 10]}
+                  />
+                  <Marker
+                    coordinate={customPrediction.coordinate}
+                    title={`✨ ${customPrediction.name}`}
+                    description={`Predicción Personalizada - Riesgo ${customPrediction.riskLevel}`}
+                    pinColor={customPrediction.color}
+                  />
+                </React.Fragment>
+              )}
+            </MapView>
           </View>
 
           {/* Leyenda del mapa actualizada */}
