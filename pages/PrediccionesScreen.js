@@ -42,6 +42,7 @@ const PrediccionesScreen = ({ navigation }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchInputFocused, setSearchInputFocused] = useState(false);
   const [confirmButtonPressed, setConfirmButtonPressed] = useState(false);
+  const [preventBlur, setPreventBlur] = useState(false); // Nuevo estado para prevenir el blur
 
   const mapRef = useRef(null);
   const searchMapRef = useRef(null);
@@ -324,10 +325,13 @@ const PrediccionesScreen = ({ navigation }) => {
 
   // Función para manejar la selección de un lugar
   const handlePlaceSelect = (place) => {
+    // Prevenir el blur temporalmente
+    setPreventBlur(true);
+    
     setSelectedLocation(place);
     setSearchText(place.name);
     setShowSuggestions(false);
-    setSearchInputFocused(false); // Añadir esto para quitar el foco
+    setSearchInputFocused(false);
 
     // Animar el mapa de búsqueda al lugar seleccionado
     if (searchMapRef.current) {
@@ -338,6 +342,22 @@ const PrediccionesScreen = ({ navigation }) => {
         longitudeDelta: 0.01,
       }, 1000);
     }
+
+    // Resetear la prevención del blur después de un momento
+    setTimeout(() => {
+      setPreventBlur(false);
+    }, 100);
+  };
+
+  // Nueva función para manejar el toque en las sugerencias
+  const handleSuggestionPress = (place) => {
+    // Inmediatamente prevenir comportamientos del blur
+    setPreventBlur(true);
+    
+    // Usar setTimeout para asegurar que se procese después de otros eventos
+    setTimeout(() => {
+      handlePlaceSelect(place);
+    }, 50);
   };
 
   // Función para confirmar la selección y enviar datos
@@ -474,21 +494,29 @@ const PrediccionesScreen = ({ navigation }) => {
               }}
               onFocus={() => {
                 setSearchInputFocused(true);
+                setPreventBlur(false); // Reset prevent blur cuando se enfoca
                 if (searchResults.length > 0) {
                   setShowSuggestions(true);
                 }
               }}
               onBlur={() => {
-                // Aumentar el delay para dar tiempo al onPress de las sugerencias
+                // No hacer nada si estamos previniendo el blur
+                if (preventBlur) {
+                  return;
+                }
+                
+                // Delay más largo para manejar el cierre del teclado
                 setTimeout(() => {
-                  if (!searchInputFocused) return; // Evitar conflictos
-                  setSearchInputFocused(false);
-                  if (!selectedLocation) {
-                    setShowSuggestions(false);
+                  if (!preventBlur) { // Verificar nuevamente después del delay
+                    setSearchInputFocused(false);
+                    if (!selectedLocation) {
+                      setShowSuggestions(false);
+                    }
                   }
-                }, 500); // Aumentado de 200 a 500ms
+                }, 300);
               }}
-              blurOnSubmit={false} // Evitar que se pierda el foco automáticamente
+              blurOnSubmit={false}
+              returnKeyType="search" // Cambiar el botón del teclado a "buscar"
             />
 
             {searchLoading && (
@@ -508,6 +536,7 @@ const PrediccionesScreen = ({ navigation }) => {
                   setShowSuggestions(false);
                   setSelectedLocation(null);
                   setSearchInputFocused(false);
+                  setPreventBlur(false);
                 }}
               >
                 <Text style={styles.clearSearchIcon}>×</Text>
@@ -568,16 +597,17 @@ const PrediccionesScreen = ({ navigation }) => {
                 nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="always" // Crítico: permite tocar las sugerencias
+                keyboardDismissMode="none" // No cerrar teclado al hacer scroll
               >
                 {searchResults.map((item) => (
                   <TouchableOpacity
                     key={item.id.toString()}
                     style={styles.suggestionItem}
-                    onPress={() => handlePlaceSelect(item)}
+                    onPress={() => handleSuggestionPress(item)}
+                    onPressIn={() => setPreventBlur(true)} // Prevenir blur al tocar
                     activeOpacity={0.7}
-                    // Añadir estas props para mejorar la responsividad
                     delayPressIn={0}
-                    delayPressOut={0}
+                    delayPressOut={100} // Pequeño delay para asegurar el procesamiento
                   >
                     <View style={styles.suggestionIcon} />
                     <View style={styles.suggestionContent}>
